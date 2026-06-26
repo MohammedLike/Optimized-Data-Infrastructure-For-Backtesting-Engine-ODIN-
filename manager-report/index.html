@@ -269,6 +269,48 @@
 
     td { color: var(--muted); }
 
+    /* Code block for dev team */
+    .code-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+    }
+
+    .dev-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 0.5rem;
+    }
+
+    .card code {
+      background: #f1f5f9;
+      color: var(--blue);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+      font-family: Consolas, Monaco, monospace;
+    }
+
+    .team-tag {
+      display: inline-block;
+      background: var(--amber-light);
+      color: var(--amber);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+
     /* Timeline */
     .timeline-item {
       display: flex;
@@ -363,6 +405,8 @@
       <a href="#solution">The fix</a>
       <a href="#how">How it works</a>
       <a href="#results">Proof</a>
+      <a href="#first-run">First click fast</a>
+      <a href="#integration">StrykeX hook-up</a>
       <a href="#timeline">Status</a>
       <a href="#ask">What we need</a>
     </nav>
@@ -407,7 +451,7 @@
       <div class="compare-box good">
         <div class="label">With ODIN (target)</div>
         <div class="num">&lt; 1 sec</div>
-        <div class="sub">Results on repeat runs</div>
+        <div class="sub">Even on the very first click</div>
       </div>
     </div>
   </section>
@@ -441,7 +485,8 @@
       <tr><th>Piece</th><th>What it does</th></tr>
       <tr><td><strong>Price database</strong></td><td>Stores all NIFTY candle data (QuestDB) — the master copy</td></tr>
       <tr><td><strong>Fast copies</strong></td><td>Keeps ready-to-use monthly files (Parquet) — like pre-sliced ingredients</td></tr>
-      <tr><td><strong>Memory cache</strong></td><td>Remembers the last request (Redis) — instant if user runs same test again</td></tr>
+      <tr><td><strong>Memory cache</strong></td><td>Remembers recent requests (Redis) — helps repeat clicks</td></tr>
+      <tr><td><strong>RAM pre-load</strong></td><td>Data loaded into server memory at startup — makes the <em>first</em> click fast too</td></tr>
       <tr><td><strong>Pre-calculated indicators</strong></td><td>RSI, EMA, MACD etc. computed overnight, not on every click</td></tr>
       <tr><td><strong>Fast engine</strong></td><td>Runs the strategy rules on optimized code instead of slow Python loops</td></tr>
     </table>
@@ -507,24 +552,145 @@ sequenceDiagram
     <div class="compare">
       <div class="compare-box bad">
         <div class="label">Old system (baseline)</div>
-        <div class="num">~119 ms</div>
-        <div class="sub">On sample data only; production hits 60s+ timeout</div>
+        <div class="num">60+ sec</div>
+        <div class="sub">Production timeout on real users</div>
       </div>
       <div class="compare-box good">
-        <div class="label">ODIN (working prototype)</div>
-        <div class="num">~37 ms</div>
-        <div class="sub">Warm run — same strategy clicked again</div>
+        <div class="label">ODIN — first click</div>
+        <div class="num">~80 ms</div>
+        <div class="sub">With pre-load enabled (tested on sample data)</div>
       </div>
     </div>
 
     <table>
       <tr><th>Scenario</th><th>Today (production)</th><th>ODIN goal</th></tr>
-      <tr><td>First backtest on a strategy</td><td style="color:var(--red)">Timeout / 60s+</td><td style="color:var(--green)">Under 5 seconds</td></tr>
+      <tr><td><strong>First</strong> backtest click</td><td style="color:var(--red)">Timeout / 60s+</td><td style="color:var(--green)">Under 1 second</td></tr>
       <tr><td>Same backtest clicked again</td><td style="color:var(--red)">Same slow wait</td><td style="color:var(--green)">Under 1 second</td></tr>
       <tr><td>User sees timeout errors</td><td style="color:var(--red)">Common</td><td style="color:var(--green)">Rare (&lt;1%)</td></tr>
     </table>
 
     <p><strong>Scope for first release:</strong> NIFTY index, 5-minute charts only. Other stocks and timeframes come in a later phase.</p>
+  </section>
+
+  <!-- FIRST RUN SPEED -->
+  <section class="card" id="first-run">
+    <h2>⚡ How the first click is fast (not just the second)</h2>
+    <p>
+      A common mistake: only caching <em>after</em> someone runs a backtest. That helps the second click, but the <strong>first</strong> user still waits.
+      ODIN fixes this by preparing data <em>before</em> anyone clicks.
+    </p>
+
+    <div class="steps">
+      <div class="step"><div class="num">1</div><strong>Overnight</strong><span>Export prices + indicators to fast files</span></div>
+      <div class="step"><div class="num">2</div><strong>Server starts</strong><span>Load NIFTY data into RAM</span></div>
+      <div class="step"><div class="num">3</div><strong>User builds strategy</strong><span>Optional: prefetch while they work</span></div>
+      <div class="step"><div class="num">4</div><strong>First Backtest click</strong><span>Fast — data already in memory</span></div>
+    </div>
+
+    <div class="diagram">
+      <div class="diagram-title">Data is ready before the user clicks</div>
+      <pre class="mermaid">
+flowchart TB
+    subgraph night [Every night at 11 PM]
+        ETL[Update fast files]
+    end
+    subgraph morning [When server starts]
+        RAM[Load NIFTY into RAM]
+    end
+    subgraph user [While user works]
+        PF[Optional prefetch call]
+    end
+    subgraph click [User clicks Backtest]
+        FAST[Result in under 1 second]
+    end
+    ETL --> RAM
+    RAM --> PF
+    PF --> FAST
+    RAM --> FAST
+      </pre>
+    </div>
+
+    <table>
+      <tr><th>Layer</th><th>When it loads</th><th>Who benefits</th></tr>
+      <tr><td><strong>RAM (pre-load)</strong></td><td>When ODIN server starts</td><td>Every user's <strong>first</strong> click</td></tr>
+      <tr><td><strong>Prefetch API</strong></td><td>When user opens Strategy Builder</td><td>Extra safety — data ready before Backtest</td></tr>
+      <tr><td><strong>Redis cache</strong></td><td>After any backtest runs</td><td>Repeat clicks by same user</td></tr>
+      <tr><td><strong>Fast files</strong></td><td>Overnight job</td><td>Backup if RAM is empty</td></tr>
+    </table>
+
+    <div class="highlight">
+      <strong>For managers:</strong> Users never wait for "warm up." The system is already warm when they arrive.
+    </div>
+  </section>
+
+  <!-- STRYKEX INTEGRATION -->
+  <section class="card" id="integration">
+    <h2>🔌 StrykeX integration — for the dev team</h2>
+    <p>Two small backend changes. <strong>No new screens</strong> for traders.</p>
+
+    <h3>Change 1 — Send backtests to ODIN</h3>
+    <p>Instead of running the backtest inline, StrykeX API calls ODIN:</p>
+    <div class="code-box">POST http://localhost:47100/v1/backtest/strykex
+Content-Type: application/json
+
+{ strategy fields from Strategy Builder }</div>
+    <p class="dev-note">Set <code>USE_ODIN=true</code> and <code>ODIN_API_URL</code> in StrykeX backend config.</p>
+
+    <h3>Change 2 — Prefetch when user picks NIFTY + 5m</h3>
+    <p>Call this as soon as the user selects instrument and timeframe (steps 1–2 of the builder). By the time they reach Entry/Exit and click Backtest, data is in memory.</p>
+    <div class="code-box">POST http://localhost:47100/v1/prefetch
+Content-Type: application/json
+
+{
+  "symbol": "NIFTY",
+  "timeframe": "5m",
+  "days": 365
+}</div>
+    <p class="dev-note">Suggested trigger: on Strategy Setup screen when NIFTY + 5 Minute is confirmed. Fire-and-forget — ignore errors silently.</p>
+
+    <div class="diagram">
+      <div class="diagram-title">Integration flow</div>
+      <pre class="mermaid">
+sequenceDiagram
+    participant U as Trader
+    participant SX as StrykeX Frontend
+    participant API as StrykeX Backend
+    participant O as ODIN
+
+    U->>SX: Pick NIFTY + 5 min chart
+    SX->>API: Strategy setup saved
+    API->>O: POST /v1/prefetch
+    Note over O: Load data into RAM
+
+    U->>SX: Add rules + click Backtest
+    SX->>API: Run backtest
+    API->>O: POST /v1/backtest/strykex
+    O-->>API: Trades + P&amp;L
+    API-->>SX: Results
+    SX-->>U: Show results fast
+      </pre>
+    </div>
+
+    <h3>API endpoints summary</h3>
+    <table>
+      <tr><th>Endpoint</th><th>When to call</th><th>Purpose</th></tr>
+      <tr><td><code>POST /v1/prefetch</code></td><td>User selects NIFTY + 5m</td><td>Pre-load data before Backtest click</td></tr>
+      <tr><td><code>POST /v1/backtest/strykex</code></td><td>User clicks Backtest</td><td>Run the actual backtest</td></tr>
+      <tr><td><code>GET /v1/prewarm/status</code></td><td>Ops / monitoring</td><td>Check if RAM pre-load succeeded</td></tr>
+      <tr><td><code>GET /health</code></td><td>Load balancer</td><td>Is ODIN up?</td></tr>
+    </table>
+
+    <h3>Ops checklist (after nightly data update)</h3>
+    <ol>
+      <li>Export new prices: <code>python -m services.nightly_etl.export</code></li>
+      <li>Pre-calculate indicators: <code>python -m services.nightly_etl.precompute</code></li>
+      <li>Refresh RAM cache: <code>python scripts/prewarm_cache.py</code></li>
+    </ol>
+    <p class="dev-note">Steps 1–3 also run automatically when ODIN API restarts if <code>PREWARM_ON_STARTUP=true</code>.</p>
+
+    <div class="highlight">
+      <strong>For managers:</strong> Dev work is ~2 API hooks + a nightly script. No product redesign.
+    </div>
   </section>
 
   <!-- TIMELINE -->
@@ -594,8 +760,8 @@ sequenceDiagram
     <ol>
       <li>Open StrykeX Strategy Builder → pick NIFTY, 5 minute chart, add 2 entry rules</li>
       <li>Click Backtest <strong>without</strong> ODIN → show timeout or long wait</li>
-      <li>Click Backtest <strong>with</strong> ODIN → results appear in a few seconds</li>
-      <li>Click the same backtest again → show it’s near-instant (cached)</li>
+      <li>Click Backtest <strong>with</strong> ODIN — results appear in under 1 second (even first click)</li>
+      <li>Explain prefetch: data loads while user builds strategy, not when they click</li>
       <li>Show this page — the simple before/after story</li>
     </ol>
   </section>

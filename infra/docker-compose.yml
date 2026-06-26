@@ -1,6 +1,3 @@
-# ODIN Docker stack — project name, containers, and host ports
-# Host ports use 47xxx to avoid clashes with other local projects.
-
 name: odin
 
 services:
