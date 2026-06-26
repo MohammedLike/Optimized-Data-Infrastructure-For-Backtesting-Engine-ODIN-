@@ -1,6 +1,6 @@
 # Manager Report — Project ODIN
 
-Full **Implementation Plan** as a static web page (mirrors `.cursor/plans/odin_backtest_infrastructure_3caad5f0.plan.md`).
+Technical architecture & delivery report for stakeholders and engineering.
 
 ## Open
 
@@ -10,12 +10,19 @@ Invoke-Item "manager-report\index.html"
 
 ## Print to PDF
 
-`Ctrl+P` → Save as PDF
+`Ctrl+P` → Save as PDF (sidebar hidden in print layout)
 
 ## Contents
 
-Exact plan sections: problem statement, request model, architecture diagrams (Mermaid), QuestDB contract, Parquet layout, indicator strategy, repo structure, all 7 phases with exit criteria, timeout fix table, success metrics, infrastructure, risks, manager demo, open items.
+| Section | Audience |
+|---------|----------|
+| Executive summary | Managers — problem, solution, ask |
+| Architecture & data tiers | Engineering — QuestDB, Redis, Parquet, HotStore, PostgreSQL |
+| Benchmarks & SLAs | Both — latency breakdown, prototype numbers |
+| API contract & StrykeX integration | Backend team — endpoints, prefetch, feature flags |
+| Phased rollout (0–6) | PM / managers — status per phase |
+| Infrastructure | DevOps — Docker ports, ops commands |
 
 ## Updating
 
-When the plan changes, regenerate or edit `index.html` to match the plan file.
+When architecture or benchmarks change, edit `index.html` to match `docs/` and `.cursor/plans/`.
