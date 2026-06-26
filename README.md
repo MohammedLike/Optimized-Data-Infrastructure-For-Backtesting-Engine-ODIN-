@@ -1,0 +1,23 @@
+# Project ODIN
+
+Optimized Data Infrastructure for NSE — backend acceleration layer for StrykeX Strategy Builder backtests.
+
+## Quick start
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e .
+python scripts/seed_data.py
+python benchmarks/baseline_strykex.py
+uvicorn services.odin_api.main:app --reload --app-dir .
+```
+
+## Services
+
+- **ODIN API** — `POST /v1/backtest`, `POST /v1/backtest/grid`, `GET /metrics`
+- **Nightly ETL** — `python -m services.nightly_etl.export` then `python -m services.nightly_etl.precompute`
+
+## Scope (Phase 1)
+
+NIFTY + 5-minute timeframe. QuestDB is source of truth; Parquet + Redis accelerate reads.

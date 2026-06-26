@@ -1,0 +1,65 @@
+indicators:
+  close:
+    column: close
+    precompute: false
+  open:
+    column: open
+    precompute: false
+  high:
+    column: high
+    precompute: false
+  low:
+    column: low
+    precompute: false
+  current_close:
+    column: close
+    strykex_name: "Current Close"
+    precompute: false
+  ema_9:
+    function: ema
+    params: { span: 9 }
+    precompute: true
+  ema_20:
+    function: ema
+    params: { span: 20 }
+    precompute: true
+  ema_50:
+    function: ema
+    params: { span: 50 }
+    precompute: true
+  ema_200:
+    function: ema
+    params: { span: 200 }
+    precompute: true
+  sma_20:
+    function: sma
+    params: { window: 20 }
+    precompute: true
+  sma_50:
+    function: sma
+    params: { window: 50 }
+    precompute: true
+  rsi_14:
+    function: rsi
+    params: { period: 14 }
+    precompute: true
+  atr_14:
+    function: atr
+    params: { period: 14 }
+    precompute: true
+  bb_upper_20:
+    function: bollinger
+    params: { window: 20, std: 2, band: upper }
+    precompute: true
+  bb_lower_20:
+    function: bollinger
+    params: { window: 20, std: 2, band: lower }
+    precompute: true
+  macd_line:
+    function: macd
+    params: { fast: 12, slow: 26, signal: 9, component: line }
+    precompute: true
+  macd_signal:
+    function: macd
+    params: { fast: 12, slow: 26, signal: 9, component: signal }
+    precompute: true
