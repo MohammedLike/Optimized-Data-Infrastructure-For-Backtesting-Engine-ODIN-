@@ -8,7 +8,7 @@ Optimized Data Infrastructure for NSE — backend acceleration layer for StrykeX
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e .
-python scripts/seed_data.py
+python scripts/load_sample_data.py
 python benchmarks/baseline_strykex.py
 
 # Optional: PostgreSQL persistent store

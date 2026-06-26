@@ -7,13 +7,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "packages"))
 sys.path.insert(0, str(ROOT))
 
-from services.nightly_etl.export import export_nifty_5m
+from services.nightly_etl.export import csv_sample_range, export_nifty_5m
 from services.nightly_etl.precompute import precompute_nifty_5m
 
 
 def main() -> None:
-    print("Seeding NIFTY 5m Parquet from CSV...")
-    export_nifty_5m(days_back=30)
+    start, end = csv_sample_range()
+    print(f"Seeding NIFTY 5m Parquet from CSV ({start.date()} to {end.date()})...")
+    export_nifty_5m(start=start, end=end)
     print("Precomputing indicators...")
     precompute_nifty_5m()
     print("Done.")

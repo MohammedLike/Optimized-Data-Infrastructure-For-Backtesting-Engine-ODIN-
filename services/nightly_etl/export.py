@@ -10,11 +10,33 @@ from odin_data.parquet_store import ParquetStore
 from odin_data.questdb import QuestDBClient
 
 
-def export_nifty_5m(days_back: int = 365 * 5, symbols: list[str] | None = None) -> None:
+def csv_sample_range() -> tuple[datetime, datetime]:
+    """Min/max timestamp range from the local QuestDB sample CSV."""
+    path = settings.raw_csv_path
+    if not path.exists():
+        raise FileNotFoundError(f"Sample CSV not found: {path}")
+    frame = pl.read_csv(path, try_parse_dates=True)
+    if frame.is_empty() or "timestamp" not in frame.columns:
+        raise ValueError(f"No timestamps in sample CSV: {path}")
+    ts = frame.with_columns(
+        pl.col("timestamp").cast(pl.Datetime(time_unit="us", time_zone="UTC"))
+    )["timestamp"]
+    start = ts.min()
+    end = ts.max() + timedelta(minutes=1)
+    return start, end
+
+
+def export_nifty_5m(
+    days_back: int | None = None,
+    symbols: list[str] | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
+) -> None:
     symbols = symbols or [settings.default_symbol]
     timeframe = settings.default_timeframe
-    end = datetime.now(timezone.utc)
-    start = end - timedelta(days=days_back)
+    if start is None or end is None:
+        end = end or datetime.now(timezone.utc)
+        start = start or (end - timedelta(days=days_back or 365 * 5))
     loader = DataLoader()
     store = ParquetStore()
 
@@ -23,7 +45,7 @@ def export_nifty_5m(days_back: int = 365 * 5, symbols: list[str] | None = None) 
             frame = loader.questdb.fetch_ohlc(symbol, start, end, timeframe)
             source = "questdb"
         else:
-            frame, _ = loader.load_ohlc(symbol, timeframe, start, end, use_redis=False, use_questdb=False)
+            frame = loader._load_csv_fallback(symbol, start, end, timeframe)
             source = "csv"
 
         if frame.is_empty():
