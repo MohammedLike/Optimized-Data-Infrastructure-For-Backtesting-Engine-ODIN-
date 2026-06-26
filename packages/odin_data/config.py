@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     redis_ttl_seconds: int = 86400
 
+    database_url: str = "postgresql://odin:odin@localhost:5434/odin"
+    use_postgres: bool = False
+
     default_symbol: str = "NIFTY"
     default_timeframe: str = "5m"
     default_series: str = "spot"

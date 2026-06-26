@@ -1,4 +1,21 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: odin
+      POSTGRES_USER: odin
+      POSTGRES_PASSWORD: odin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odin -d odin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     ports:
@@ -14,12 +31,18 @@ services:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://odin:odin@postgres:5432/odin
       - USE_REDIS=true
+      - USE_POSTGRES=true
       - USE_QUESTDB=false
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - ../data:/app/data
 
 volumes:
+  postgres_data:
   redis_data:
