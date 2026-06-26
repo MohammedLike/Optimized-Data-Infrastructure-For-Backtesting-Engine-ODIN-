@@ -5,7 +5,6 @@ import polars as pl
 
 from odin_data.config import settings
 from odin_data.parquet_store import ParquetStore
-from odin_data.postgres_store import PostgresStore
 from odin_data.questdb import QuestDBClient
 from odin_data.redis_cache import RedisCache
 from odin_data.schema import validate_ohlc
@@ -22,7 +21,6 @@ class LoadStats:
 @dataclass
 class DataLoader:
     parquet: ParquetStore = field(default_factory=ParquetStore)
-    postgres: PostgresStore = field(default_factory=PostgresStore)
     redis: RedisCache = field(default_factory=RedisCache)
     questdb: QuestDBClient = field(default_factory=QuestDBClient)
 
@@ -39,7 +37,6 @@ class DataLoader:
 
         use_redis = settings.use_redis if use_redis is None else use_redis
         use_questdb = settings.use_questdb if use_questdb is None else use_questdb
-        use_postgres = settings.use_postgres
         start_s = start.isoformat()
         end_s = end.isoformat()
         t0 = time.perf_counter()
@@ -50,19 +47,6 @@ class DataLoader:
             if cached is not None and not cached.is_empty():
                 stats = LoadStats(tier="redis", rows=cached.height, latency_ms=(time.perf_counter() - t0) * 1000, cache_hit=True)
                 return validate_ohlc(cached), stats
-
-        if use_postgres and self.postgres.ping():
-            frame = self.postgres.read_ohlc(symbol, timeframe, start, end, settings.default_series)
-            if frame is not None:
-                if use_redis and self.redis.available:
-                    key = self.redis.ohlc_key(symbol, timeframe, start_s, end_s)
-                    self.redis.set_frame(key, frame)
-                stats = LoadStats(
-                    tier="postgres",
-                    rows=frame.height,
-                    latency_ms=(time.perf_counter() - t0) * 1000,
-                )
-                return validate_ohlc(frame), stats
 
         frame = self.parquet.read_ohlc(symbol, timeframe, start, end)
         if frame is not None:
@@ -76,8 +60,6 @@ class DataLoader:
             frame = self.questdb.fetch_ohlc(symbol, start, end, timeframe)
             if not frame.is_empty():
                 self._writeback_months(symbol, timeframe, frame)
-                if use_postgres and self.postgres.ping():
-                    self.postgres.upsert_ohlc(frame, symbol, timeframe, settings.default_series, source="questdb")
                 if use_redis and self.redis.available:
                     key = self.redis.ohlc_key(symbol, timeframe, start_s, end_s)
                     self.redis.set_frame(key, frame)
@@ -87,8 +69,6 @@ class DataLoader:
         frame = self._load_csv_fallback(symbol, start, end, timeframe)
         if not frame.is_empty():
             self._writeback_months(symbol, timeframe, frame)
-            if use_postgres and self.postgres.ping():
-                self.postgres.upsert_ohlc(frame, symbol, timeframe, settings.default_series, source="csv")
             if use_redis and self.redis.available:
                 key = self.redis.ohlc_key(symbol, timeframe, start_s, end_s)
                 self.redis.set_frame(key, frame)

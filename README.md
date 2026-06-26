@@ -2,34 +2,43 @@
 
 Optimized Data Infrastructure for NSE — backend acceleration layer for StrykeX Strategy Builder backtests.
 
+## Architecture
+
+```
+OHLC:     QuestDB → Parquet → Redis → backtest
+Other:    PostgreSQL (indicators, catalog, extensions)
+```
+
 ## Quick start
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e .
-python scripts/load_sample_data.py
-python benchmarks/baseline_strykex.py
 
-# Optional: PostgreSQL persistent store
-docker compose -f infra/docker-compose.yml up -d postgres
-python scripts/init_database.py
-python scripts/sync_postgres.py
+# Start data stores
+docker compose -f infra/docker-compose.yml up -d questdb postgres redis
+
+# Load sample CSV into QuestDB + Parquet + PostgreSQL indicators
+python scripts/setup_questdb_pipeline.py
+
+python benchmarks/baseline_strykex.py
+python benchmarks/odin_nifty_5m.py
 
 uvicorn services.odin_api.main:app --reload --app-dir .
 ```
 
 ## Services
 
-- **ODIN API** — `POST /v1/backtest`, `POST /v1/backtest/grid`, `GET /metrics` (Docker: port **47100**)
-- **PostgreSQL** — `odin.ohlc_bars`, `odin.indicator_bars` (Docker: port **47132**)
+- **QuestDB** — OHLC source of truth (Docker: port **47900**) — `docs/questdb-schema.md`
+- **PostgreSQL** — indicators + catalog (Docker: port **47132**) — `docs/postgres-schema.md`
 - **Redis** — cache (Docker: port **47179**)
-- **Docker** — see `docs/docker.md` for container names and ports
-- **Nightly ETL** — `python -m services.nightly_etl.export` then `python -m services.nightly_etl.precompute`
+- **ODIN API** — `POST /v1/backtest`, `GET /v1/indicators` (Docker: port **47100**)
+- **Nightly ETL** — `python -m services.nightly_etl.export` then `precompute` then `scripts/sync_postgres.py`
 
 ## Scope (Phase 1)
 
-NIFTY + 5-minute timeframe. QuestDB is source of truth; Parquet + Redis + PostgreSQL accelerate reads.
+NIFTY + 5-minute timeframe.
 
 ## Indicator catalog
 

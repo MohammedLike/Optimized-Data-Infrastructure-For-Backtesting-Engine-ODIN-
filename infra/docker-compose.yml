@@ -30,6 +30,21 @@ services:
     volumes:
       - redis_data:/data
 
+  questdb:
+    image: questdb/questdb:latest
+    container_name: odin-questdb
+    ports:
+      - "47900:9000"
+      - "47909:9009"
+    volumes:
+      - questdb_data:/var/lib/questdb
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9000/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
   odin-api:
     build:
       context: ..
@@ -40,11 +55,15 @@ services:
     environment:
       - REDIS_URL=redis://odin-redis:6379/0
       - DATABASE_URL=postgresql://odin:odin@odin-postgres:5432/odin
+      - QUESTDB_HOST=odin-questdb
+      - QUESTDB_PORT=9000
       - USE_REDIS=true
       - USE_POSTGRES=true
-      - USE_QUESTDB=false
+      - USE_QUESTDB=true
     depends_on:
       postgres:
+        condition: service_healthy
+      questdb:
         condition: service_healthy
       redis:
         condition: service_started
@@ -54,3 +73,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  questdb_data:

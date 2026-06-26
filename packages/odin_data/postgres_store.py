@@ -323,6 +323,20 @@ class PostgresStore:
             frame = frame.rename({"ts": "timestamp"})
         return frame
 
+    def clear_ohlc(self, symbol: str | None = None, timeframe: str | None = None) -> int:
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                if symbol and timeframe:
+                    cur.execute(
+                        "DELETE FROM odin.ohlc_bars WHERE symbol = %s AND timeframe = %s",
+                        (symbol, timeframe),
+                    )
+                else:
+                    cur.execute("DELETE FROM odin.ohlc_bars")
+                deleted = cur.rowcount
+            conn.commit()
+        return deleted
+
     def row_counts(self, symbol: str, timeframe: str) -> dict[str, int]:
         with self.connect() as conn:
             with conn.cursor() as cur:

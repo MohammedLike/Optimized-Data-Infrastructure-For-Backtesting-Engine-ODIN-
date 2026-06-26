@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     raw_csv_path: Path = project_root / "questdb-query-1781940224994.csv"
 
     questdb_host: str = "localhost"
-    questdb_port: int = 9000
+    questdb_port: int = 47900
     questdb_table: str = "ohlc_5m"
     questdb_user: str = "admin"
     questdb_password: str = "quest"
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     redis_ttl_seconds: int = 86400
 
     database_url: str = "postgresql://odin:odin@localhost:47132/odin"
-    use_postgres: bool = False
+    use_postgres: bool = True
 
     default_symbol: str = "NIFTY"
     default_timeframe: str = "5m"
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     gateway_timeout_seconds: int = 60
 
     use_redis: bool = True
-    use_questdb: bool = False
+    use_questdb: bool = True
 
 
 settings = Settings()
