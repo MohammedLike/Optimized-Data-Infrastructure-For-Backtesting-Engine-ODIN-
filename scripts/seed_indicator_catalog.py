@@ -17,7 +17,7 @@ def main() -> None:
     if not store.ping():
         raise SystemExit(
             "PostgreSQL unavailable. Run:\n"
-            "  docker compose -f infra/docker-compose.yml up -d postgres\n"
+            "  docker compose -f infra/docker-compose.yml up -d postgres  # port 47132\n"
             "  python scripts/init_database.py"
         )
 

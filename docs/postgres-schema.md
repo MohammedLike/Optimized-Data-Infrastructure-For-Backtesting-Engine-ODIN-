@@ -101,5 +101,5 @@ VALUES ('NIFTY', '5m', '2026-06-01T09:15:00Z', '{"vwap": 24510.5}');
 
 | Variable | Default |
 |----------|---------|
-| `DATABASE_URL` | `postgresql://odin:odin@localhost:5434/odin` |
+| `DATABASE_URL` | `postgresql://odin:odin@localhost:47132/odin` |
 | `USE_POSTGRES` | `false` |

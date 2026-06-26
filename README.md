@@ -21,8 +21,10 @@ uvicorn services.odin_api.main:app --reload --app-dir .
 
 ## Services
 
-- **ODIN API** — `POST /v1/backtest`, `POST /v1/backtest/grid`, `GET /metrics`
-- **PostgreSQL** — `odin.ohlc_bars`, `odin.indicator_bars`, `odin.bar_extensions` (see `docs/postgres-schema.md`)
+- **ODIN API** — `POST /v1/backtest`, `POST /v1/backtest/grid`, `GET /metrics` (Docker: port **47100**)
+- **PostgreSQL** — `odin.ohlc_bars`, `odin.indicator_bars` (Docker: port **47132**)
+- **Redis** — cache (Docker: port **47179**)
+- **Docker** — see `docs/docker.md` for container names and ports
 - **Nightly ETL** — `python -m services.nightly_etl.export` then `python -m services.nightly_etl.precompute`
 
 ## Scope (Phase 1)

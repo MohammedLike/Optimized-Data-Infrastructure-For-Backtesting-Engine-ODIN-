@@ -1,8 +1,14 @@
+# ODIN Docker stack — project name, containers, and host ports
+# Host ports use 47xxx to avoid clashes with other local projects.
+
+name: odin
+
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: odin-postgres
     ports:
-      - "5434:5432"
+      - "47132:5432"
     environment:
       POSTGRES_DB: odin
       POSTGRES_USER: odin
@@ -18,8 +24,9 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: odin-redis
     ports:
-      - "6379:6379"
+      - "47179:6379"
     volumes:
       - redis_data:/data
 
@@ -27,11 +34,12 @@ services:
     build:
       context: ..
       dockerfile: infra/Dockerfile
+    container_name: odin-api
     ports:
-      - "8000:8000"
+      - "47100:8000"
     environment:
-      - REDIS_URL=redis://redis:6379/0
-      - DATABASE_URL=postgresql://odin:odin@postgres:5432/odin
+      - REDIS_URL=redis://odin-redis:6379/0
+      - DATABASE_URL=postgresql://odin:odin@odin-postgres:5432/odin
       - USE_REDIS=true
       - USE_POSTGRES=true
       - USE_QUESTDB=false

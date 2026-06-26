@@ -15,7 +15,7 @@ def main() -> None:
     if not store.ping():
         raise SystemExit(
             "Cannot connect to PostgreSQL. Start it with:\n"
-            "  docker compose -f infra/docker-compose.yml up -d postgres\n"
+            "  docker compose -f infra/docker-compose.yml up -d postgres  # port 47132\n"
             "Then set DATABASE_URL in .env"
         )
     store.init_schema()

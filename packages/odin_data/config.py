@@ -18,10 +18,10 @@ class Settings(BaseSettings):
     questdb_user: str = "admin"
     questdb_password: str = "quest"
 
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://localhost:47179/0"
     redis_ttl_seconds: int = 86400
 
-    database_url: str = "postgresql://odin:odin@localhost:5434/odin"
+    database_url: str = "postgresql://odin:odin@localhost:47132/odin"
     use_postgres: bool = False
 
     default_symbol: str = "NIFTY"

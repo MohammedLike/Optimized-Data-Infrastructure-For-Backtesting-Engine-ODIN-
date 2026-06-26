@@ -36,6 +36,8 @@ Set `USE_ODIN=true` in StrykeX backend and forward backtest calls to:
 POST http://odin-api:8000/v1/backtest/strykex
 ```
 
+(Inside Docker network port is 8000; on host use `http://localhost:47100`.)
+
 Response includes `summary`, `trades`, `equity_curve`, `latency`, and `data_tier`.
 
 ## Timeout root cause

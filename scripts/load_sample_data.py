@@ -41,7 +41,7 @@ def main() -> None:
 
         sync_from_parquet(settings.default_symbol, settings.default_timeframe)
     else:
-        print("  PostgreSQL not running — skipped (start with: docker compose -f infra/docker-compose.yml up -d postgres)")
+        print("  PostgreSQL not running — skipped (docker compose -f infra/docker-compose.yml up -d postgres, port 47132)")
 
     print("\nDone. Sample data loaded.")
 
