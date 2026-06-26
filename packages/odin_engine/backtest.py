@@ -86,7 +86,7 @@ class BacktestEngine:
                 data_tier=load_stats.tier,
             )
 
-        precomputed = self.loader.parquet.read_indicators(request.symbol, request.timeframe, start, end)
+        precomputed = self.loader.load_indicators(request.symbol, request.timeframe, start, end)
         resolver = IndicatorResolver(self.loader.redis, request.symbol, request.timeframe)
 
         entry_rules = request.entry_rules or [

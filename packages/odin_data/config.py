@@ -33,5 +33,9 @@ class Settings(BaseSettings):
     use_redis: bool = True
     use_questdb: bool = True
 
+    hot_store_enabled: bool = True
+    prewarm_on_startup: bool = True
+    prewarm_day_ranges: list[int] = [90, 365]
+
 
 settings = Settings()

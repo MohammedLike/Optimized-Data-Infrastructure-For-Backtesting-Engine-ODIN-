@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import polars as pl
 
 from odin_data.config import settings
+from odin_data.hot_store import hot_store
 from odin_data.parquet_store import ParquetStore
 from odin_data.questdb import QuestDBClient
 from odin_data.redis_cache import RedisCache
@@ -40,6 +41,17 @@ class DataLoader:
         start_s = start.isoformat()
         end_s = end.isoformat()
         t0 = time.perf_counter()
+
+        if settings.hot_store_enabled:
+            hot = hot_store.get_ohlc(symbol, timeframe, start, end)
+            if hot is not None and not hot.is_empty():
+                stats = LoadStats(
+                    tier="ram",
+                    rows=hot.height,
+                    latency_ms=(time.perf_counter() - t0) * 1000,
+                    cache_hit=True,
+                )
+                return validate_ohlc(hot), stats
 
         if use_redis and self.redis.available:
             key = self.redis.ohlc_key(symbol, timeframe, start_s, end_s)
@@ -78,6 +90,26 @@ class DataLoader:
             latency_ms=(time.perf_counter() - t0) * 1000,
         )
         return frame, stats
+
+    def load_indicators(
+        self,
+        symbol: str,
+        timeframe: str,
+        start: datetime,
+        end: datetime,
+    ) -> pl.DataFrame | None:
+        if settings.hot_store_enabled:
+            hot = hot_store.get_indicators(symbol, timeframe, start, end)
+            if hot is not None and not hot.is_empty():
+                return hot
+
+        if settings.use_redis and self.redis.available:
+            key = self.redis.indicators_slice_key(symbol, timeframe, start.isoformat(), end.isoformat())
+            cached = self.redis.get_frame(key)
+            if cached is not None and not cached.is_empty():
+                return cached
+
+        return self.parquet.read_indicators(symbol, timeframe, start, end)
 
     def _writeback_months(self, symbol: str, timeframe: str, frame: pl.DataFrame) -> None:
         if frame.is_empty():

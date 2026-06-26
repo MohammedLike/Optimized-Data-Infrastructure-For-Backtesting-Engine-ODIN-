@@ -9,12 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "packages"))
 sys.path.insert(0, str(ROOT))
 
+from odin_data.prewarm import prewarm_defaults, warmup_backtest
 from odin_engine.backtest import BacktestEngine, BacktestRequest
 from odin_engine.conditions import Condition, Operator
 
 
 def run_odin_benchmark() -> dict:
-    engine = BacktestEngine()
     request = BacktestRequest(
         symbol="NIFTY",
         timeframe="5m",
@@ -24,8 +24,10 @@ def run_odin_benchmark() -> dict:
         ],
     )
 
-    # Warm up Numba JIT
-    engine.run(request)
+    # Simulate API startup: RAM prewarm + one throwaway backtest (JIT compile)
+    prewarm_defaults()
+    warmup_backtest()
+    engine = BacktestEngine()
 
     t0 = time.perf_counter()
     cold = engine.run(request)
@@ -50,6 +52,7 @@ def run_odin_benchmark() -> dict:
             "wall_ms": round(warm_ms, 2),
         },
         "targets_met": {
+            "cold_under_1s": cold_ms < 1000,
             "cold_under_5s": cold_ms < 5000,
             "warm_under_500ms": warm_ms < 500,
         },

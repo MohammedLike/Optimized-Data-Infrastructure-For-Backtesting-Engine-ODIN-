@@ -42,6 +42,10 @@ class RedisCache:
         return f"ohlc:{symbol}:{timeframe}:{start}:{end}"
 
     @staticmethod
+    def indicators_slice_key(symbol: str, timeframe: str, start: str, end: str) -> str:
+        return f"indicators:{symbol}:{timeframe}:{start}:{end}"
+
+    @staticmethod
     def indicator_key(symbol: str, timeframe: str, name: str, params: dict[str, Any], start: str, end: str) -> str:
         params_hash = hashlib.md5(json.dumps(params, sort_keys=True).encode()).hexdigest()[:12]
         return f"ind:{symbol}:{timeframe}:{name}:{params_hash}:{start}:{end}"

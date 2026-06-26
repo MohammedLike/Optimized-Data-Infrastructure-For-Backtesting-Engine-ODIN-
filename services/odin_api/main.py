@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 from typing import Any
 
 import polars as pl
@@ -6,11 +7,23 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from odin_data.config import settings
+from odin_data.prewarm import prewarm_defaults, prewarm_slice, warmup_backtest
 from odin_engine.backtest import BacktestEngine, BacktestRequest, BacktestResult
 from odin_engine.conditions import Condition
 from services.odin_api.strykex_adapter import StrykeXBacktestRequest, to_backtest_request, to_strykex_response
 
-app = FastAPI(title="ODIN Backtest API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if settings.prewarm_on_startup:
+        results = prewarm_defaults()
+        warmup_backtest()
+        app.state.prewarm = results
+    yield
+
+
+app = FastAPI(title="ODIN Backtest API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,6 +45,12 @@ class GridBacktestRequest(BaseModel):
     timeframe: str = "5m"
     entry_rules: list[Condition] = Field(default_factory=list)
     param_grid: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class PrefetchRequest(BaseModel):
+    symbol: str = "NIFTY"
+    timeframe: str = "5m"
+    days: int = 365
 
 
 @app.get("/v1/indicators")
@@ -88,6 +107,38 @@ def indicator_rules(slug: str) -> dict[str, Any]:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "odin-api"}
+
+
+@app.get("/v1/prewarm/status")
+def prewarm_status() -> dict[str, Any]:
+    from odin_data.hot_store import hot_store
+
+    warmed = getattr(app.state, "prewarm", [])
+    return {
+        "prewarm_on_startup": settings.prewarm_on_startup,
+        "hot_slices": hot_store.keys(),
+        "ranges": [
+            {"symbol": r.symbol, "timeframe": r.timeframe, "days": r.days, "ohlc_rows": r.ohlc_rows, "tiers": r.tiers}
+            for r in warmed
+        ],
+    }
+
+
+@app.post("/v1/prefetch")
+def prefetch(request: PrefetchRequest) -> dict[str, Any]:
+    """Call when user opens Strategy Builder — data is ready before they click Backtest."""
+    result = prewarm_slice(request.symbol, request.timeframe, request.days)
+    if result is None:
+        raise HTTPException(status_code=404, detail="No Parquet data for this symbol/timeframe/range")
+    return {
+        "status": "ready",
+        "symbol": result.symbol,
+        "timeframe": result.timeframe,
+        "days": result.days,
+        "ohlc_rows": result.ohlc_rows,
+        "indicator_rows": result.indicator_rows,
+        "tiers": result.tiers,
+    }
 
 
 @app.get("/metrics")
@@ -155,7 +206,7 @@ def run_grid_backtest(request: GridBacktestRequest) -> dict[str, Any]:
 
 def _record_metrics(result: BacktestResult, t0: float) -> None:
     _metrics["requests"] += 1
-    if result.data_tier == "redis":
+    if result.data_tier in ("redis", "ram"):
         _metrics["cache_hits"] += 1
     _metrics["total_latency_ms"] += (time.perf_counter() - t0) * 1000
     _metrics["last_data_tier"] = result.data_tier
