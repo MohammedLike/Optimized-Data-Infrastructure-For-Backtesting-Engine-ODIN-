@@ -73,6 +73,15 @@ USE_POSTGRES=true
 
 Read tier order: **Redis → PostgreSQL → Parquet → QuestDB → CSV**
 
+## Indicator catalog
+
+StrykeX indicator metadata and entry/exit rules:
+
+- `odin.indicator_catalog` — 96 indicators
+- `odin.condition_rule_templates` — quant rule templates
+
+See `docs/indicator-catalog.md` and run `python scripts/seed_indicator_catalog.py`.
+
 ## Example queries
 
 ```sql

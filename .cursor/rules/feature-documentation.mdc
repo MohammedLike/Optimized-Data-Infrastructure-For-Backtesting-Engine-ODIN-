@@ -1,0 +1,43 @@
+---
+description: Document every new big feature in docs/ before finishing work
+alwaysApply: true
+---
+
+# Feature Documentation (ODIN)
+
+When implementing a **new big feature** (new service, data tier, schema, API surface, indicator batch, integration, or multi-file subsystem), **create or update a markdown file in `docs/`** before considering the work done.
+
+## When to write docs
+
+- New database tables, migrations, or storage tiers → update `docs/postgres-schema.md` or add a focused doc
+- New indicators / rule catalog changes → update `docs/indicator-catalog.md`
+- QuestDB contract or query changes → update `docs/questdb-schema.md`
+- StrykeX / external API adapter changes → update `docs/strykex-integration.md`
+- Architecture or data-flow changes → update `docs/architecture.md`
+- Anything else substantial → add `docs/<feature-name>.md` (kebab-case)
+
+Skip docs for tiny fixes (typos, one-liners, test-only changes).
+
+## Each doc must include
+
+1. **What** — purpose and scope in 1–2 sentences
+2. **How to run** — commands, env vars, docker steps
+3. **Schema / API** — tables, endpoints, key types (when relevant)
+4. **Examples** — SQL queries, curl, or sample payloads
+5. **Links** — related files (`packages/`, `scripts/`, `infra/`)
+
+## Conventions
+
+- Match tone and structure of existing docs in `docs/`
+- Update `README.md` quick-start only when the default dev workflow changes
+- Do not create docs the user did not need; one focused file beats duplicating content across many files
+
+## Existing docs (reference)
+
+| File | Topic |
+|------|-------|
+| `docs/architecture.md` | System overview, data tiers |
+| `docs/postgres-schema.md` | PostgreSQL tables and env |
+| `docs/indicator-catalog.md` | StrykeX indicators and rules |
+| `docs/questdb-schema.md` | QuestDB DDL and queries |
+| `docs/strykex-integration.md` | StrykeX adapter and API |

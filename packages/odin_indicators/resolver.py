@@ -6,6 +6,7 @@ import polars as pl
 
 from odin_data.redis_cache import RedisCache
 from odin_indicators.compute import compute_indicator, load_registry
+from odin_indicators.strykex_catalog import parameter_map as catalog_parameter_map
 
 
 @dataclass
@@ -62,10 +63,5 @@ class IndicatorResolver:
     @staticmethod
     def _map_strykex_name(name: str) -> str:
         normalized = name.lower().replace(" ", "_")
-        mapping = {
-            "current_close": "current_close",
-            "rsi": "rsi_14",
-            "ema_20": "ema_20",
-            "ema_9": "ema_9",
-        }
-        return mapping.get(normalized, normalized)
+        mapping = catalog_parameter_map()
+        return mapping.get(normalized, mapping.get(name.lower().strip(), normalized))

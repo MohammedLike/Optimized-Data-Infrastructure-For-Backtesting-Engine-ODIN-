@@ -1,6 +1,7 @@
 import time
 from typing import Any
 
+import polars as pl
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -31,6 +32,57 @@ class GridBacktestRequest(BaseModel):
     timeframe: str = "5m"
     entry_rules: list[Condition] = Field(default_factory=list)
     param_grid: list[dict[str, Any]] = Field(default_factory=list)
+
+
+@app.get("/v1/indicators")
+def list_indicators(category: str | None = None) -> dict[str, Any]:
+    """List StrykeX indicator catalog from PostgreSQL or in-memory fallback."""
+    from odin_data.postgres_store import PostgresStore
+    from odin_indicators.strykex_catalog import load_catalog
+
+    store = PostgresStore()
+    if store.ping():
+        frame = store.catalog_summary()
+        if frame is not None:
+            if category:
+                frame = frame.filter(pl.col("category") == category)
+            return {"source": "postgres", "count": frame.height, "indicators": frame.to_dicts()}
+
+    catalog = load_catalog()
+    if category:
+        catalog = [i for i in catalog if i["category"] == category]
+    return {
+        "source": "catalog",
+        "count": len(catalog),
+        "indicators": [
+            {
+                "slug": i["slug"],
+                "display_name": i["display_name"],
+                "category": i["category"],
+                "indicator_type": i["indicator_type"],
+                "implementation_status": i.get("implementation_status"),
+                "rule_count": len(i.get("rules", [])),
+            }
+            for i in catalog
+        ],
+    }
+
+
+@app.get("/v1/indicators/{slug}/rules")
+def indicator_rules(slug: str) -> dict[str, Any]:
+    from odin_data.postgres_store import PostgresStore
+    from odin_indicators.strykex_catalog import catalog_by_slug
+
+    store = PostgresStore()
+    if store.ping():
+        rules = store.get_indicator_rules(slug)
+        if rules is not None and not rules.is_empty():
+            return {"slug": slug, "source": "postgres", "rules": rules.to_dicts()}
+
+    item = catalog_by_slug().get(slug)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Unknown indicator: {slug}")
+    return {"slug": slug, "source": "catalog", "rules": item.get("rules", [])}
 
 
 @app.get("/health")

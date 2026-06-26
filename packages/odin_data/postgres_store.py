@@ -54,13 +54,114 @@ class PostgresStore:
         except Exception:
             return False
 
-    def init_schema(self, schema_path: Path | None = None) -> None:
-        path = schema_path or settings.project_root / "infra" / "postgres" / "init" / "001_schema.sql"
-        sql_text = path.read_text(encoding="utf-8")
+    def init_schema(self, schema_dir: Path | None = None) -> None:
+        directory = schema_dir or settings.project_root / "infra" / "postgres" / "init"
+        sql_files = sorted(directory.glob("*.sql"))
         with self.connect() as conn:
             with conn.cursor() as cur:
-                cur.execute(sql_text)
+                for path in sql_files:
+                    cur.execute(path.read_text(encoding="utf-8"))
             conn.commit()
+
+    def seed_indicator_catalog(self) -> dict[str, int]:
+        from odin_indicators.strykex_catalog import load_catalog
+
+        catalog = load_catalog()
+        indicator_rows = 0
+        rule_rows = 0
+
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                for order, item in enumerate(catalog, start=1):
+                    cur.execute(
+                        """
+                        INSERT INTO odin.indicator_catalog (
+                            slug, display_name, category, indicator_type,
+                            default_params, precompute, implementation_status,
+                            description, sort_order
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (slug) DO UPDATE SET
+                            display_name = EXCLUDED.display_name,
+                            category = EXCLUDED.category,
+                            indicator_type = EXCLUDED.indicator_type,
+                            default_params = EXCLUDED.default_params,
+                            precompute = EXCLUDED.precompute,
+                            implementation_status = EXCLUDED.implementation_status,
+                            description = EXCLUDED.description,
+                            sort_order = EXCLUDED.sort_order
+                        """,
+                        (
+                            item["slug"],
+                            item["display_name"],
+                            item["category"],
+                            item["indicator_type"],
+                            psycopg.types.json.Jsonb(item.get("default_params", {})),
+                            bool(item.get("precompute", False)),
+                            item.get("implementation_status", "planned"),
+                            item.get("description"),
+                            order,
+                        ),
+                    )
+                    indicator_rows += 1
+
+                    for priority, rule in enumerate(item.get("rules", []), start=1):
+                        cur.execute(
+                            """
+                            INSERT INTO odin.condition_rule_templates (
+                                indicator_slug, rule_purpose, rule_name,
+                                left_operand, operator, right_operand,
+                                right_value, logic_notes, priority
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            ON CONFLICT (indicator_slug, rule_purpose, rule_name) DO UPDATE SET
+                                left_operand = EXCLUDED.left_operand,
+                                operator = EXCLUDED.operator,
+                                right_operand = EXCLUDED.right_operand,
+                                right_value = EXCLUDED.right_value,
+                                logic_notes = EXCLUDED.logic_notes,
+                                priority = EXCLUDED.priority
+                            """,
+                            (
+                                item["slug"],
+                                rule["purpose"],
+                                rule["rule_name"],
+                                rule.get("left_operand"),
+                                rule.get("operator"),
+                                rule.get("right_operand"),
+                                rule.get("right_value"),
+                                rule.get("logic_notes"),
+                                priority,
+                            ),
+                        )
+                        rule_rows += 1
+            conn.commit()
+
+        return {"indicators": indicator_rows, "rules": rule_rows}
+
+    def catalog_summary(self) -> pl.DataFrame | None:
+        return self._read_frame("SELECT * FROM odin.indicator_catalog_summary ORDER BY sort_order", ())
+
+    def get_indicator_rules(self, slug: str) -> pl.DataFrame | None:
+        query = """
+            SELECT rule_purpose, rule_name, left_operand, operator,
+                   right_operand, right_value, logic_notes, priority
+            FROM odin.condition_rule_templates
+            WHERE indicator_slug = %s
+            ORDER BY priority, rule_purpose
+        """
+        return self._read_frame(query, (slug,))
+
+    def catalog_stats(self) -> dict[str, int]:
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT COUNT(*) AS n FROM odin.indicator_catalog")
+                indicators = cur.fetchone()["n"]
+                cur.execute("SELECT COUNT(*) AS n FROM odin.condition_rule_templates")
+                rules = cur.fetchone()["n"]
+                cur.execute(
+                    "SELECT COUNT(*) AS n FROM odin.indicator_catalog WHERE implementation_status = 'implemented'"
+                )
+                implemented = cur.fetchone()["n"]
+        return {"indicators": indicators, "rules": rules, "implemented": implemented}
 
     def upsert_ohlc(
         self,

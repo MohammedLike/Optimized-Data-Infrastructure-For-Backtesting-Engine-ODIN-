@@ -27,4 +27,12 @@ uvicorn services.odin_api.main:app --reload --app-dir .
 
 ## Scope (Phase 1)
 
-NIFTY + 5-minute timeframe. QuestDB is source of truth; Parquet + Redis accelerate reads.
+NIFTY + 5-minute timeframe. QuestDB is source of truth; Parquet + Redis + PostgreSQL accelerate reads.
+
+## Indicator catalog
+
+96 StrykeX indicators with entry/exit rule templates — see `docs/indicator-catalog.md`.
+
+```bash
+python scripts/seed_indicator_catalog.py
+```

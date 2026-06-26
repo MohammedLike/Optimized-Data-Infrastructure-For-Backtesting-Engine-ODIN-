@@ -33,6 +33,9 @@ class StrykeXBacktestRequest(BaseModel):
     use_odin: bool = True
 
 
+from odin_indicators.strykex_catalog import parameter_map as catalog_parameter_map
+
+
 CONDITION_MAP = {
     "equal": Operator.EQ,
     "eq": Operator.EQ,
@@ -44,16 +47,7 @@ CONDITION_MAP = {
     "crosses_below": Operator.CROSSES_BELOW,
 }
 
-PARAMETER_MAP = {
-    "current close": "current_close",
-    "current_close": "current_close",
-    "close": "close",
-    "ema 20": "ema_20",
-    "ema_9": "ema_9",
-    "ema 9": "ema_9",
-    "rsi": "rsi_14",
-    "rsi 14": "rsi_14",
-}
+PARAMETER_MAP = catalog_parameter_map()
 
 
 def _map_parameter(name: str) -> str:
