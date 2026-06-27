@@ -1,6 +1,6 @@
 # Manager Report — Project ODIN
 
-Technical architecture & delivery report for stakeholders and engineering.
+Web version of **Project ODIN Prototype.docx** — formal manager report with embedded charts.
 
 ## Open
 
@@ -8,21 +8,22 @@ Technical architecture & delivery report for stakeholders and engineering.
 Invoke-Item "manager-report\index.html"
 ```
 
+## Assets
+
+Charts extracted from the Word document live in `manager-report/assets/`:
+
+| Figure | File |
+|--------|------|
+| 1 — Backtest response time | `d4e31ef3...png` |
+| 2 — Architecture flow | `89e62040...png` |
+| 3 — Cache layer distribution | `26bb5d18...png` |
+| 4 — Indicator tier donut | `dbf735d6...png` |
+| 5 — 7-week timeline | `6463e37c...png` |
+
 ## Print to PDF
 
-`Ctrl+P` → Save as PDF (sidebar hidden in print layout)
-
-## Contents
-
-| Section | Audience |
-|---------|----------|
-| Executive summary | Managers — problem, solution, ask |
-| Architecture & data tiers | Engineering — QuestDB, Redis, Parquet, HotStore, PostgreSQL |
-| Benchmarks & SLAs | Both — latency breakdown, prototype numbers |
-| API contract & StrykeX integration | Backend team — endpoints, prefetch, feature flags |
-| Phased rollout (0–6) | PM / managers — status per phase |
-| Infrastructure | DevOps — Docker ports, ops commands |
+`Ctrl+P` → Save as PDF (cover + all 16 sections)
 
 ## Updating
 
-When architecture or benchmarks change, edit `index.html` to match `docs/` and `.cursor/plans/`.
+Edit `Project ODIN Prototype.docx` first, then sync `index.html` and re-extract images if charts change.

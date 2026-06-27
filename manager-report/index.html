@@ -3,1033 +3,492 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Project ODIN — Technical Architecture &amp; Delivery Report</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-  <style>
-    :root {
-      --ink: #0c1222;
-      --ink-soft: #3d4a5c;
-      --ink-muted: #64748b;
-      --paper: #f4f6fa;
-      --card: #ffffff;
-      --line: #e2e8f0;
-      --navy: #0a1628;
-      --accent: #2563eb;
-      --accent-soft: #eff6ff;
-      --teal: #0d9488;
-      --teal-soft: #ccfbf1;
-      --green: #059669;
-      --green-soft: #d1fae5;
-      --red: #dc2626;
-      --red-soft: #fee2e2;
-      --amber: #d97706;
-      --amber-soft: #fef3c7;
-      --sidebar: 272px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
-
-    body {
-      font-family: "DM Sans", system-ui, sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      line-height: 1.65;
-      font-size: 15px;
-    }
-
-    .layout { display: flex; min-height: 100vh; }
-
-    /* Sidebar */
-    .sidebar {
-      width: var(--sidebar);
-      flex-shrink: 0;
-      background: var(--navy);
-      color: #fff;
-      position: fixed;
-      inset: 0 auto 0 0;
-      overflow-y: auto;
-      z-index: 100;
-      padding: 1.5rem 0 2rem;
-    }
-
-    .sidebar-brand {
-      padding: 0 1.25rem 1.25rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      margin-bottom: 1rem;
-    }
-
-    .sidebar-brand .logo {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: 1.65rem;
-      line-height: 1.1;
-    }
-
-    .sidebar-brand .logo em { color: #38bdf8; font-style: normal; }
-
-    .sidebar-brand p {
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.5);
-      margin-top: 0.4rem;
-      line-height: 1.4;
-    }
-
-    .nav-label {
-      font-size: 0.62rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: rgba(255,255,255,0.35);
-      padding: 0.75rem 1.25rem 0.35rem;
-    }
-
-    .sidebar a {
-      display: block;
-      padding: 0.38rem 1.25rem;
-      color: rgba(255,255,255,0.7);
-      text-decoration: none;
-      font-size: 0.8rem;
-      font-weight: 500;
-      border-left: 3px solid transparent;
-    }
-
-    .sidebar a:hover {
-      color: #fff;
-      background: rgba(255,255,255,0.05);
-      border-left-color: #38bdf8;
-    }
-
-    .main { margin-left: var(--sidebar); flex: 1; min-width: 0; }
-
-    /* Hero */
-    .hero {
-      background: linear-gradient(145deg, #0a1628 0%, #1e3a5f 45%, #1d4ed8 100%);
-      color: #fff;
-      padding: 2.75rem 2.5rem 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 80% 20%, rgba(56,189,248,0.15) 0%, transparent 55%);
-      pointer-events: none;
-    }
-
-    .hero-inner { max-width: 920px; position: relative; }
-
-    .hero-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #7dd3fc;
-      margin-bottom: 0.85rem;
-    }
-
-    .hero-tag::before {
-      content: "";
-      width: 20px; height: 2px;
-      background: #38bdf8;
-    }
-
-    .hero h1 {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: clamp(2rem, 4vw, 2.75rem);
-      font-weight: 400;
-      line-height: 1.1;
-      margin-bottom: 0.85rem;
-    }
-
-    .hero-lead {
-      font-size: 1.02rem;
-      color: rgba(255,255,255,0.82);
-      max-width: 40rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      padding-top: 1.25rem;
-      border-top: 1px solid rgba(255,255,255,0.12);
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.55);
-    }
-
-    .hero-meta strong {
-      display: block;
-      color: rgba(255,255,255,0.9);
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.15rem;
-    }
-
-    /* KPI strip */
-    .kpi-strip {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      background: var(--card);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .kpi {
-      padding: 1.15rem 1.25rem;
-      text-align: center;
-      border-right: 1px solid var(--line);
-    }
-
-    .kpi:last-child { border-right: none; }
-
-    .kpi .val {
-      font-family: "Instrument Serif", serif;
-      font-size: 1.75rem;
-      line-height: 1;
-      color: var(--navy);
-    }
-
-    .kpi .val.bad { color: var(--red); }
-    .kpi .val.good { color: var(--green); }
-    .kpi .val.accent { color: var(--accent); }
-
-    .kpi .lbl {
-      font-size: 0.7rem;
-      color: var(--ink-muted);
-      margin-top: 0.35rem;
-      font-weight: 500;
-    }
-
-    /* Content */
-    .content { padding: 2rem 2.5rem 4rem; max-width: 960px; }
-
-    section { margin-bottom: 2.75rem; }
-
-    .section-head {
-      display: flex;
-      align-items: baseline;
-      gap: 0.85rem;
-      margin-bottom: 1.1rem;
-      padding-bottom: 0.65rem;
-      border-bottom: 2px solid var(--navy);
-    }
-
-    .section-id {
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: var(--teal);
-      letter-spacing: 0.08em;
-    }
-
-    h2 {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: 1.55rem;
-      font-weight: 400;
-      color: var(--navy);
-    }
-
-    h3 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin: 1.35rem 0 0.55rem;
-    }
-
-    p { color: var(--ink-soft); margin-bottom: 0.8rem; }
-    ul, ol { margin: 0.5rem 0 0.85rem 1.2rem; color: var(--ink-soft); }
-    li { margin-bottom: 0.35rem; }
-    li::marker { color: var(--teal); }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.85rem;
-      margin: 1rem 0;
-    }
-
-    .mini-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 1rem;
-    }
-
-    .mini-card .icon {
-      font-size: 1.25rem;
-      margin-bottom: 0.4rem;
-    }
-
-    .mini-card h4 {
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 0.3rem;
-    }
-
-    .mini-card p { font-size: 0.82rem; margin: 0; }
-
-    .callout {
-      border-radius: 0 10px 10px 0;
-      padding: 0.9rem 1.1rem;
-      margin: 1rem 0;
-      font-size: 0.9rem;
-    }
-
-    .callout.blue { background: var(--accent-soft); border-left: 4px solid var(--accent); color: #1e40af; }
-    .callout.teal { background: var(--teal-soft); border-left: 4px solid var(--teal); color: #0f766e; }
-    .callout.amber { background: var(--amber-soft); border-left: 4px solid var(--amber); color: #92400e; }
-
-    .tier-stack { display: flex; flex-direction: column; gap: 0.45rem; margin: 1rem 0; }
-
-    .tier {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      padding: 0.75rem 1rem;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-    }
-
-    .tier .badge {
-      font-size: 0.62rem;
-      font-weight: 700;
-      padding: 0.2rem 0.45rem;
-      border-radius: 4px;
-      min-width: 28px;
-      text-align: center;
-    }
-
-    .tier.l0 .badge { background: #fce7f3; color: #9d174d; }
-    .tier.l1 .badge { background: #fef3c7; color: #92400e; }
-    .tier.l2 .badge { background: #dbeafe; color: #1e40af; }
-    .tier.l3 .badge { background: #e0e7ff; color: #3730a3; }
-    .tier.l4 .badge { background: #d1fae5; color: #065f46; }
-
-    .tier strong { font-size: 0.88rem; min-width: 130px; color: var(--navy); }
-    .tier span { font-size: 0.84rem; color: var(--ink-muted); }
-
-    .diagram {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 1.25rem 0.75rem;
-      margin: 1rem 0;
-      overflow-x: auto;
-    }
-
-    .diagram-cap {
-      text-align: center;
-      font-size: 0.72rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ink-muted);
-      margin-bottom: 0.75rem;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--card);
-      margin: 1rem 0;
-    }
-
-    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-
-    th {
-      background: var(--navy);
-      color: #fff;
-      font-weight: 600;
-      text-align: left;
-      padding: 0.65rem 0.9rem;
-      font-size: 0.74rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    td {
-      padding: 0.6rem 0.9rem;
-      border-bottom: 1px solid var(--line);
-      color: var(--ink-soft);
-      vertical-align: top;
-    }
-
-    tr:last-child td { border-bottom: none; }
-    tr:nth-child(even) td { background: #fafbfc; }
-
-    td code, th code {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.78em;
-      background: #f1f5f9;
-      color: var(--teal);
-      padding: 0.1rem 0.3rem;
-      border-radius: 3px;
-    }
-
-    .cell-bad { background: var(--red-soft) !important; color: var(--red) !important; font-weight: 600; }
-    .cell-good { background: var(--green-soft) !important; color: var(--green) !important; font-weight: 600; }
-
-    pre, .code-block {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.78rem;
-      line-height: 1.55;
-      border-radius: 10px;
-      overflow-x: auto;
-      margin: 0.85rem 0;
-    }
-
-    pre {
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 1rem 1.15rem;
-    }
-
-    pre.tree {
-      background: #f8fafc;
-      color: var(--ink-soft);
-      border: 1px solid var(--line);
-      padding: 1rem 1.15rem;
-    }
-
-    p code, li code {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.85em;
-      background: #f1f5f9;
-      color: var(--teal);
-      padding: 0.1rem 0.35rem;
-      border-radius: 4px;
-    }
-
-    .phase {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 0.75rem;
-      background: var(--card);
-    }
-
-    .phase-hd {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      padding: 0.85rem 1.1rem;
-      background: #f8fafc;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .phase-hd h4 { font-size: 0.92rem; color: var(--navy); margin: 0; }
-
-    .tag {
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.2rem 0.55rem;
-      border-radius: 999px;
-    }
-
-    .tag.done { background: var(--green-soft); color: var(--green); }
-    .tag.pending { background: var(--amber-soft); color: var(--amber); }
-
-    .phase-bd { padding: 0.9rem 1.1rem; font-size: 0.86rem; }
-    .phase-bd ul { margin-bottom: 0.5rem; }
-
-    .exit {
-      margin-top: 0.65rem;
-      padding: 0.55rem 0.75rem;
-      background: var(--green-soft);
-      border-radius: 6px;
-      font-size: 0.8rem;
-      color: #065f46;
-    }
-
-    .bench-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin: 0.4rem 0;
-      font-size: 0.82rem;
-    }
-
-    .bench-bar .name { min-width: 90px; color: var(--ink-muted); }
-    .bench-bar .track { flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-    .bench-bar .fill { height: 100%; border-radius: 4px; }
-    .bench-bar .fill.bad { background: var(--red); }
-    .bench-bar .fill.good { background: var(--green); }
-    .bench-bar .ms { min-width: 52px; text-align: right; font-weight: 600; font-family: "JetBrains Mono", monospace; font-size: 0.75rem; }
-
-    footer {
-      margin-left: var(--sidebar);
-      padding: 1.25rem 2.5rem;
-      border-top: 1px solid var(--line);
-      font-size: 0.76rem;
-      color: var(--ink-muted);
-      background: var(--card);
-    }
-
-    @media (max-width: 960px) {
-      .sidebar { display: none; }
-      .main, footer { margin-left: 0; }
-      .kpi-strip { grid-template-columns: 1fr 1fr; }
-      .card-grid { grid-template-columns: 1fr; }
-      .hero, .content { padding-left: 1.25rem; padding-right: 1.25rem; }
-    }
-
-    @media print {
-      .sidebar { display: none; }
-      .main, footer { margin-left: 0; }
-    }
-  </style>
+  <title>Project ODIN — Manager Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<div class="layout">
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+<div class="progress-bar"><span id="progress"></span></div>
 
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="logo">Project <em>ODIN</em></div>
-      <p>Optimized Data Infrastructure for NSE — Backtesting Acceleration Layer</p>
-    </div>
-    <div class="nav-label">Overview</div>
-    <a href="#executive">Executive summary</a>
-    <a href="#problem">Problem statement</a>
-    <a href="#metrics">Benchmarks &amp; SLAs</a>
-    <div class="nav-label">Architecture</div>
-    <a href="#architecture">System architecture</a>
-    <a href="#data-tiers">Multi-tier data plane</a>
-    <a href="#request-flow">Request flow</a>
-    <a href="#data-stores">Data stores</a>
-    <a href="#indicators">Indicator engine</a>
-    <div class="nav-label">Engineering</div>
-    <a href="#api">API contract</a>
-    <a href="#integration">StrykeX integration</a>
-    <a href="#prewarm">Cold-start prewarm</a>
-    <a href="#infra">Infrastructure</a>
-    <a href="#repo">Repository</a>
-    <div class="nav-label">Delivery</div>
-    <a href="#phases">Phased rollout</a>
-    <a href="#risks">Risks</a>
-    <a href="#ask">Approvals needed</a>
-  </aside>
+<nav class="side-nav" aria-label="Report sections">
+  <div class="logo">ODIN<span>Manager Report · 2026</span></div>
+  <div class="side-links">
+    <a href="#s1"><span class="n">01</span> Executive Summary</a>
+    <a href="#s2"><span class="n">02</span> Problem Statement</a>
+    <a href="#s3"><span class="n">03</span> Architecture</a>
+    <a href="#s4"><span class="n">04</span> Parameter Mapping</a>
+    <a href="#s5"><span class="n">05</span> QuestDB Contract</a>
+    <a href="#s6"><span class="n">06</span> Parquet Layout</a>
+    <a href="#s7"><span class="n">07</span> Indicators</a>
+    <a href="#s8"><span class="n">08</span> Phased Rollout</a>
+    <a href="#s9"><span class="n">09</span> Timeout Fix</a>
+    <a href="#s10"><span class="n">10</span> Success Metrics</a>
+    <a href="#s11"><span class="n">11</span> Infrastructure</a>
+    <a href="#s12"><span class="n">12</span> Risks</a>
+    <a href="#s13"><span class="n">13</span> Repository</a>
+    <a href="#s14"><span class="n">14</span> Open Items</a>
+    <a href="#s15"><span class="n">15</span> Demo Plan</a>
+    <a href="#s16"><span class="n">16</span> Recommendation</a>
+  </div>
+  <div class="side-footer">Confidential · StockWiz Technologies LLP</div>
+</nav>
 
-  <div class="main">
+<main class="site">
 
-    <header class="hero">
-      <div class="hero-inner">
-        <div class="hero-tag">StrykeX Strategy Builder · Backend Infrastructure</div>
-        <h1>Sub-second backtests.<br>Zero UI changes.</h1>
-        <p class="hero-lead">
-          <strong>Project ODIN</strong> is a dedicated acceleration layer between StrykeX and QuestDB —
-          multi-tier caching (RAM → Redis → Parquet), nightly indicator precompute,
-          and a Numba-compiled execution kernel. Prototype validated on NIFTY 5m; production rollout pending sign-off.
-        </p>
-        <div class="hero-meta">
-          <div><strong>Product</strong> strykex.in/strategy-builder</div>
-          <div><strong>Phase 1 scope</strong> NIFTY · 5m · spot</div>
-          <div><strong>Stack</strong> QuestDB · PostgreSQL · Redis · Parquet · FastAPI</div>
-          <div><strong>Status</strong> Prototype complete</div>
-        </div>
+  <nav class="mobile-nav" aria-label="Quick navigation">
+    <a href="#s1">Summary</a>
+    <a href="#s3">Architecture</a>
+    <a href="#s8">Phases</a>
+    <a href="#s10">Metrics</a>
+    <a href="#s16">Action</a>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-badge">Manager Report · June 2026</div>
+      <h1>Project <em>ODIN</em></h1>
+      <p class="tagline">Optimized Data Infrastructure for NSE Backtesting Engine — a multi-tier acceleration layer for StrykeX Strategy Builder.</p>
+      <div class="hero-chips">
+        <span>StrykeX Strategy Builder</span>
+        <span>NIFTY · 5m</span>
+        <span>Prototype Complete</span>
       </div>
-    </header>
+      <div class="hero-meta">
+        <strong>Product</strong> strykex.in/strategy-builder<br />
+        <strong>Prepared for</strong> StockWiz Technologies LLP · Internal Distribution
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="val bad">60s+</div>
+        <div class="lbl">Production timeout</div>
+      </div>
+      <div class="stat-card">
+        <div class="val good">&lt;8s</div>
+        <div class="lbl">ODIN cold target</div>
+      </div>
+      <div class="stat-card">
+        <div class="val neon">&lt;1s</div>
+        <div class="lbl">Prototype prewarm</div>
+      </div>
+      <div class="stat-card">
+        <div class="val good">&lt;500ms</div>
+        <div class="lbl">Repeat request</div>
+      </div>
+      <div class="stat-card wide">
+        <div class="val accent">96</div>
+        <div class="lbl">Indicators catalogued in PostgreSQL</div>
+      </div>
+    </div>
+  </header>
 
-    <div class="kpi-strip">
-      <div class="kpi"><div class="val bad">60s+</div><div class="lbl">Production p95 (timeout)</div></div>
-      <div class="kpi"><div class="val good">&lt;1s</div><div class="lbl">ODIN SLA — first click</div></div>
-      <div class="kpi"><div class="val good">~30ms</div><div class="lbl">Prototype p50 latency</div></div>
-      <div class="kpi"><div class="val accent">96</div><div class="lbl">StrykeX indicators catalogued</div></div>
+  <div class="content-shell">
+
+    <div class="intro-grid">
+      <div class="executive-brief glass-card">
+        <h2>Executive Brief</h2>
+        <p>StrykeX backtest requests for NIFTY 5-minute strategies currently timeout due to unbounded QuestDB scans, per-request indicator recomputation, and single-threaded Python execution. Project ODIN introduces a multi-tier data and compute acceleration layer — Redis, Parquet, Polars, and Numba — between the StrykeX Strategy Builder and QuestDB.</p>
+        <p>The StrykeX UI remains unchanged. Only the backtest backend is augmented. Target outcome: cold backtest response from 60+ second timeout to under 8 seconds; repeat requests under 500ms.</p>
+        <p class="action">Recommended Action: Approve Phase 0 + Phase 1 immediately. No new infrastructure required. Production cutover at Phase 5 (Week 6).</p>
+      </div>
+
+      <nav class="toc glass-card">
+        <h2>Contents</h2>
+        <ol class="toc-grid">
+          <li><a href="#s1"><span class="num">01</span> Executive Summary</a></li>
+          <li><a href="#s2"><span class="num">02</span> Problem Statement</a></li>
+          <li><a href="#s3"><span class="num">03</span> ODIN Architecture</a></li>
+          <li><a href="#s4"><span class="num">04</span> Parameter Mapping</a></li>
+          <li><a href="#s5"><span class="num">05</span> QuestDB Contract</a></li>
+          <li><a href="#s6"><span class="num">06</span> Parquet Layout</a></li>
+          <li><a href="#s7"><span class="num">07</span> Indicator Strategy</a></li>
+          <li><a href="#s8"><span class="num">08</span> Phased Rollout</a></li>
+          <li><a href="#s9"><span class="num">09</span> Timeout Fix Summary</a></li>
+          <li><a href="#s10"><span class="num">10</span> Success Metrics</a></li>
+          <li><a href="#s11"><span class="num">11</span> Infrastructure</a></li>
+          <li><a href="#s12"><span class="num">12</span> Risks</a></li>
+          <li><a href="#s13"><span class="num">13</span> Repository</a></li>
+          <li><a href="#s14"><span class="num">14</span> Open Items</a></li>
+          <li><a href="#s15"><span class="num">15</span> Demo Plan</a></li>
+          <li><a href="#s16"><span class="num">16</span> Recommendation</a></li>
+        </ol>
+      </nav>
     </div>
 
-    <div class="content">
+    <div class="sections-flow">
+    <section id="s1" data-num="01">
+      <h2 class="section-title">1. Executive Summary</h2>
+      <p>StrykeX users building strategies on NIFTY 5-minute charts routinely encounter timeout errors and multi-minute wait times when running backtests. Root cause analysis identifies three compounding failures in the current path: (1) unbounded QuestDB scans that fetch years of data regardless of user-specified date ranges, (2) full indicator recomputation from scratch on every request, and (3) single-threaded Python loops for condition evaluation.</p>
+      <p>Project ODIN is a dedicated backtest data and compute acceleration service that sits between the existing StrykeX Strategy Builder and QuestDB. It introduces a four-layer stack — Redis hot cache, Parquet columnar store, nightly indicator precomputation, and a Numba JIT execution kernel — to serve the majority of backtest requests in under 10 seconds without touching QuestDB at runtime.</p>
+      <p>The StrykeX frontend and user experience remain completely unchanged. ODIN is a backend-only acceleration layer — no UI modifications are required in this project scope.</p>
+      <figure>
+        <img src="assets/d4e31ef389c242be59fd36764439918d17890975.png" alt="Backtest Response Time Before vs After ODIN" width="720" />
+        <figcaption>Figure 1: NIFTY 5m Backtest Response Time — Before vs After ODIN</figcaption>
+      </figure>
+      <div class="proto-note"><strong>Prototype update (June 2026):</strong> With HotStore RAM prewarm + QuestDB-first pipeline, measured first-click latency on sample data is ~80ms wall time — exceeding the targets above. See <code>benchmarks/odin_nifty_5m.py</code>.</div>
+    </section>
 
-      <!-- EXECUTIVE -->
-      <section id="executive">
-        <div class="section-head"><span class="section-id">§01</span><h2>Executive summary</h2></div>
-        <div class="card-grid">
-          <div class="mini-card">
-            <div class="icon">⚠</div>
-            <h4>Business problem</h4>
-            <p>Strategy Builder backtests hit HTTP gateway timeouts. Users see &ldquo;Oops timeout error&rdquo; after 60+ seconds — blocking strategy validation and deployment.</p>
-          </div>
-          <div class="mini-card">
-            <div class="icon">⚡</div>
-            <h4>Technical solution</h4>
-            <p>ODIN intercepts backtest requests via <code>POST /v1/backtest/strykex</code>. OHLC served from a 4-tier read path; indicators precomputed nightly; conditions evaluated in a Numba JIT kernel.</p>
-          </div>
-          <div class="mini-card">
-            <div class="icon">✓</div>
-            <h4>Delivery ask</h4>
-            <p>Approve StrykeX API redirect (<code>USE_ODIN=true</code>), provision Redis + ETL cron, and provide production QuestDB credentials. No frontend work required.</p>
-          </div>
-        </div>
-        <div class="callout blue">
-          <strong>Plain English:</strong> We built a speed layer behind StrykeX. Traders use the same UI; only the backtest backend gets faster, cached, and reliable.
-        </div>
-      </section>
+    <!-- 2. PROBLEM -->
+    <section id="s2" data-num="02">
+      <h2 class="section-title">2. Problem Statement</h2>
+      <p>The StrykeX Strategy Builder guides users through a four-step flow to configure and run a backtest: (1) Strategy Overview — instrument, segment; (2) Strategy Setup — chart timeframe, spot/futures; (3) Entry &amp; Exit Criteria — indicators and conditions; (4) Preview and Deployment — backtest execution.</p>
+      <h3>2.1 Current Failure Modes</h3>
+      <ul>
+        <li>Backend fetches full 5-year OHLC history from QuestDB on every request, regardless of user-specified date range</li>
+        <li>Every indicator (RSI, EMA, MACD, ATR, Bollinger Bands) is recomputed from raw OHLC on every single backtest run</li>
+        <li>Condition evaluation loop runs as single-threaded Python, iterating candle-by-candle</li>
+        <li>HTTP gateway timeout threshold (typically 30–60 seconds) is hit before results return</li>
+        <li>Second run of the identical strategy produces the same slow path — no caching layer exists today</li>
+      </ul>
+      <h3>2.2 Impact on Users</h3>
+      <div class="highlight-quote">"Oops timeout error" — This is the error message StrykeX users see today on any strategy with 2+ indicators or a date range exceeding 6 months. The experience effectively blocks the core use case of the Strategy Builder.</div>
+    </section>
 
-      <!-- PROBLEM -->
-      <section id="problem">
-        <div class="section-head"><span class="section-id">§02</span><h2>Problem statement</h2></div>
-        <p>When a user completes the StrykeX builder flow (NIFTY → 5 Minute → Entry/Exit rules → Backtest), the synchronous backend path fails under load:</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Root cause</th><th>Technical detail</th><th>User impact</th></tr></thead>
-            <tbody>
-              <tr><td>Unbounded OHLC fetch</td><td>Full 5-year QuestDB scan per request; no partition pruning at API layer</td><td class="cell-bad">60s+ wait</td></tr>
-              <tr><td>Redundant indicator compute</td><td>RSI, EMA, MACD recomputed in Pandas on every candle, every click</td><td class="cell-bad">CPU-bound</td></tr>
-              <tr><td>Single-threaded evaluation</td><td>Python/Pandas condition loop over ~20k bars/year</td><td class="cell-bad">Slow</td></tr>
-              <tr><td>Gateway timeout</td><td>Load balancer cuts connection before JSON response</td><td class="cell-bad">Error screen</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="callout teal">
-          <strong>ODIN positioning:</strong> Drop-in backend service between StrykeX API and QuestDB. Strategy Builder UI remains unchanged.
-        </div>
-      </section>
+    <!-- 3. ARCHITECTURE -->
+    <section id="s3" data-num="03">
+      <h2 class="section-title">3. Proposed Solution — ODIN Architecture</h2>
+      <p>ODIN introduces a multi-tier acceleration layer. Each tier attacks a distinct bottleneck. The layers are ordered by speed — a hit at L1 (Redis) bypasses all slower tiers below. Only requests with no cached data reach QuestDB.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Layer</th><th>Technology</th><th>Purpose</th><th>When Bypassed</th></tr></thead>
+          <tbody>
+            <tr><td>L0 — RAM Preload</td><td>HotStore (in-process)</td><td>Startup prewarm of NIFTY 5m slices</td><td>First user click (prototype)</td></tr>
+            <tr><td>L1 — Hot Cache</td><td>Redis 7</td><td>In-memory OHLC + indicator blobs (Arrow IPC)</td><td>Every subsequent identical request</td></tr>
+            <tr><td>L2 — Column Store</td><td>Apache Parquet</td><td>Monthly columnar files per symbol/timeframe</td><td>Full cache hit at L1</td></tr>
+            <tr><td>L3 — Source</td><td>QuestDB (existing)</td><td>Ground truth for all market data — never removed</td><td>Always checked on gap only</td></tr>
+            <tr><td>L4 — Engine</td><td>Polars + Numba JIT</td><td>Vectorized indicator compute + condition evaluation</td><td>N/A — always executes on request</td></tr>
+            <tr><td>Batch</td><td>Nightly ETL (11PM IST)</td><td>Exports NIFTY 5m + precomputes Tier A indicators offline</td><td>Runs off-peak; never on request path</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="figure-row">
+        <figure>
+          <img src="assets/89e62040efbbadaf96975d924b9288beababc37e.png" alt="ODIN Architecture Request Flow" />
+          <figcaption>Figure 2: ODIN System Architecture — Request Flow Diagram</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/26bb5d18a507835bc92a71d3719a38efff2c131e.png" alt="Request Distribution Across Cache Layers" />
+          <figcaption>Figure 3: Steady-State Request Distribution Across Cache Layers</figcaption>
+        </figure>
+      </div>
+    </section>
 
-      <!-- METRICS -->
-      <section id="metrics">
-        <div class="section-head"><span class="section-id">§03</span><h2>Benchmarks &amp; SLAs</h2></div>
-        <p>Validated on NIFTY 5m sample dataset (~3,903 bars, Apr–Jun 2026). Benchmark: <code>benchmarks/odin_nifty_5m.py</code></p>
+    <!-- 4. MAPPING -->
+    <section id="s4" data-num="04">
+      <h2 class="section-title">4. StrykeX UI → ODIN Parameter Mapping</h2>
+      <p>ODIN exposes <code>POST /v1/backtest</code> and <code>POST /v1/backtest/strykex</code>. The existing StrykeX backtest API forwards requests to ODIN in Phase 5 via feature flag <code>USE_ODIN=true</code>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>StrykeX UI Field</th><th>ODIN Parameter</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Instrument (NIFTY)</td><td><code>symbol=NIFTY</code></td><td>Phase 1 scope; BANKNIFTY in Phase 6</td></tr>
+            <tr><td>Chart Time Frame (5 Minute)</td><td><code>timeframe=5m</code></td><td>Phase 1 scope; 1m/15m/1h in Phase 6</td></tr>
+            <tr><td>Chart Selection (Spot)</td><td><code>series=spot</code></td><td>QuestDB table and symbol key lookup</td></tr>
+            <tr><td>Entry conditions</td><td><code>entry_rules[]</code></td><td>Array of {indicator, operator, value}</td></tr>
+            <tr><td>Exit conditions</td><td><code>exit_rules[]</code></td><td>Indicator, time-based, SL/target exits</td></tr>
+            <tr><td>Date range</td><td><code>start</code>, <code>end</code></td><td>Default: last 1 year; unbounded 5y rejected</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-        <h3>Latency breakdown (ODIN first click, prewarm enabled)</h3>
-        <div class="bench-bar"><span class="name">Data tier</span><div class="track"><div class="fill good" style="width:2%"></div></div><span class="ms">0.5ms</span></div>
-        <div class="bench-bar"><span class="name">Indicators</span><div class="track"><div class="fill good" style="width:12%"></div></div><span class="ms">29ms</span></div>
-        <div class="bench-bar"><span class="name">Numba engine</span><div class="track"><div class="fill good" style="width:1%"></div></div><span class="ms">0.2ms</span></div>
-        <div class="bench-bar"><span class="name">Total</span><div class="track"><div class="fill good" style="width:8%"></div></div><span class="ms">~30ms</span></div>
-        <div class="bench-bar"><span class="name">Baseline</span><div class="track"><div class="fill bad" style="width:100%"></div></div><span class="ms">60s+</span></div>
+    <!-- 5. QUESTDB -->
+    <section id="s5" data-num="05">
+      <h2 class="section-title">5. QuestDB Query Contract (Phase 0 — Immediate Win)</h2>
+      <p>Before any new infrastructure is deployed, significant latency reduction is achievable by enforcing bounded, column-specific queries against QuestDB. The current path issues unbounded <code>SELECT *</code> queries across the full partitioned table — a preventable anti-pattern.</p>
+      <h3>5.1 Required Query Pattern</h3>
+      <p>Every ODIN query to QuestDB must conform to the following contract. Unbounded queries are rejected at the API layer before execution:</p>
+      <pre>SELECT timestamp, open, high, low, close, volume
+FROM   ohlc_5m
+WHERE  symbol    = 'NIFTY'
+  AND  timeframe = '5m'
+  AND  timestamp >= '2024-01-01T00:00:00.000000Z'
+  AND  timestamp &lt;  '2025-01-01T00:00:00.000000Z'</pre>
+      <h3>5.2 Required Schema Checks</h3>
+      <ul>
+        <li>Table must be partitioned by MONTH or DAY on the timestamp column</li>
+        <li>Filters on <code>symbol</code> and <code>timeframe</code> must be in the WHERE clause — never filtered in Python post-fetch</li>
+        <li><code>SELECT *</code> is prohibited; only required columns are fetched</li>
+        <li>Designated timestamp column must align with StrykeX 5-minute candle definitions</li>
+      </ul>
+    </section>
 
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Scenario</th><th>Production today</th><th>ODIN target</th><th>Prototype</th></tr></thead>
-            <tbody>
-              <tr><td>First backtest click (cold)</td><td class="cell-bad">Timeout / 60s+</td><td class="cell-good">&lt; 1 sec</td><td class="cell-good">~80ms wall</td></tr>
-              <tr><td>Repeat identical request</td><td class="cell-bad">Same</td><td class="cell-good">&lt; 1 sec</td><td class="cell-good">~30ms</td></tr>
-              <tr><td>1 year · 3+ indicators</td><td class="cell-bad">Timeout</td><td class="cell-good">&lt; 1 sec</td><td>TBD prod data</td></tr>
-              <tr><td>UI timeout rate</td><td class="cell-bad">High</td><td class="cell-good">&lt; 1%</td><td>N/A</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+    <!-- 6. PARQUET -->
+    <section id="s6" data-num="06">
+      <h2 class="section-title">6. Parquet Storage Layout</h2>
+      <p>Monthly Parquet files per symbol/timeframe replace hot SQL reads for the backtest data path. Apache Arrow (used by Polars) reads Parquet 10–30× faster than equivalent SQL for analytical column scans — the exact access pattern of backtesting.</p>
+      <pre class="tree">data/parquet/
+  ohlc/
+    NIFTY/5m/
+      2021-01.parquet
+      2021-02.parquet
+      ...  (monthly partitions)
+      2026-06.parquet
+  indicators/
+    NIFTY/5m/
+      2024-01.parquet    # rsi_14, ema_9, ema_20, atr_14, bb_upper, bb_lower, macd_*
+  catalog.json           # manifest: min_ts, max_ts, available months per symbol/TF</pre>
+      <p>Nightly ETL exports only NIFTY 5m initially. All other symbols and timeframes remain served by QuestDB until Phase 6. Estimated storage: 500 MB – 2 GB for full NIFTY 5m history.</p>
+    </section>
 
-      <!-- ARCHITECTURE -->
-      <section id="architecture">
-        <div class="section-head"><span class="section-id">§04</span><h2>System architecture</h2></div>
-        <div class="diagram">
-          <div class="diagram-cap">Component topology</div>
-          <pre class="mermaid">
-flowchart TB
-    subgraph client [StrykeX]
-        UI[Strategy Builder UI]
-        SXAPI[StrykeX Backtest API]
-    end
+    <!-- 7. INDICATORS -->
+    <section id="s7" data-num="07">
+      <h2 class="section-title">7. Indicator Strategy</h2>
+      <p>Indicator computation is the dominant compute cost for multi-indicator strategies. ODIN eliminates per-request indicator recomputation through a two-tier approach:</p>
+      <h3>7.1 Tier A — Precompute Nightly (Standard Parameters)</h3>
+      <p>Covers approximately 80% of user requests. Computed offline during the nightly ETL batch and stored in Parquet indicator files. Zero compute cost on the request path.</p>
+      <ul>
+        <li>Price fields: open, high, low, close, volume (from OHLC Parquet)</li>
+        <li>Moving averages: EMA 9, 20, 50, 200; SMA 20, 50</li>
+        <li>Momentum: RSI 14, MACD (12, 26, 9), Stochastic (14, 3, 3)</li>
+        <li>Volatility: ATR 14, Bollinger Bands (20, 2)</li>
+        <li>96 StrykeX catalog indicators in PostgreSQL — see <code>docs/indicator-catalog.md</code></li>
+      </ul>
+      <h3>7.2 Tier B — On-Demand + Redis Cache (Custom Parameters)</h3>
+      <p>Custom parameter combinations (e.g., RSI 21 instead of 14). Computed once with Polars on first request, then cached in Redis.</p>
+      <p>Cache key format: <code>ind:NIFTY:5m:RSI:21:{start_hash}:{end_hash}</code></p>
+      <figure>
+        <img src="assets/dbf735d62b3e4bbee5c11fc6b12c66453a865e8c.png" alt="Indicator Compute Strategy by Tier" width="480" />
+        <figcaption>Figure 4: Indicator Compute Strategy — % of Requests by Tier</figcaption>
+      </figure>
+    </section>
 
-    subgraph odin [ODIN Service - FastAPI]
-        BT[BacktestOrchestrator]
-        IR[IndicatorResolver]
-        CE[Numba ConditionEngine]
-        HS[HotStore RAM]
-    end
+    <!-- 8. PHASES -->
+    <section id="s8" data-num="08">
+      <h2 class="section-title">8. Phased Rollout Plan</h2>
+      <p>ODIN is delivered across six production phases plus an initial baseline phase. Each phase has a single objective, a measurable exit criterion, and leaves the StrykeX UI unaffected.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Phase</th><th>Name</th><th>Timeline</th><th>Primary Goal</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Phase 0</td><td>Baseline &amp; QuestDB Fixes</td><td>Week 1</td><td>Immediate win — no new infra</td><td><span class="badge done">Complete</span></td></tr>
+            <tr><td>Phase 1</td><td>Parquet Tier</td><td>Week 2</td><td>10–30× faster analytical reads</td><td><span class="badge done">Complete</span></td></tr>
+            <tr><td>Phase 2</td><td>Redis Cache</td><td>Week 3</td><td>Eliminates repeat-request latency</td><td><span class="badge done">Complete</span></td></tr>
+            <tr><td>Phase 3</td><td>Indicator Precompute</td><td>Week 4</td><td>Multi-indicator compute cost</td><td><span class="badge done">Complete</span></td></tr>
+            <tr><td>Phase 4</td><td>Fast Execution Engine</td><td>Week 5</td><td>10×+ Numba JIT speedup</td><td><span class="badge done">Complete</span></td></tr>
+            <tr><td>Phase 5</td><td>StrykeX Integration</td><td>Week 6</td><td>Production cutover</td><td><span class="badge pending">Pending</span></td></tr>
+            <tr><td>Phase 6</td><td>Scale Beyond NIFTY 5m</td><td>Week 7+</td><td>Full catalog + Ray grid</td><td><span class="badge planned">Planned</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure>
+        <img src="assets/6463e37cd96ace2b981e6106456d00166501e6b6.png" alt="7-Week Implementation Timeline" width="720" />
+        <figcaption>Figure 5: Project ODIN — 7-Week Implementation Timeline</figcaption>
+      </figure>
 
-    subgraph cache [Cache Tier]
-        Redis[(Redis L1)]
-    end
+      <div class="phase-grid">
+      <div class="phase-block"><div class="phase-hd">Phase 0 — Baseline &amp; QuestDB Fixes (Week 1)</div><div class="phase-bd"><p>Profile latency breakdown; apply bounded query contract; document StrykeX API schema.</p><div class="exit"><strong>Exit:</strong> QuestDB queries for NIFTY 5m return in under 2 seconds for a 1-year range.</div></div></div>
+      <div class="phase-block"><div class="phase-hd">Phase 1 — Parquet Tier (Week 2)</div><div class="phase-bd"><p>Nightly export to monthly Parquet; <code>pl.scan_parquet</code> read path; QuestDB on gap only.</p><div class="exit"><strong>Exit:</strong> 1-year NIFTY 5m OHLC load under 500ms from Parquet.</div></div></div>
+      <div class="phase-block"><div class="phase-hd">Phase 2 — Redis Cache (Week 3)</div><div class="phase-bd"><p>OHLC + indicator slice keys; 24h TTL; <code>/metrics</code> cache hit rate.</p><div class="exit"><strong>Exit:</strong> Identical backtest twice — second run under 500ms total.</div></div></div>
+      <div class="phase-block"><div class="phase-hd">Phase 3 — Indicator Precompute (Week 4)</div><div class="phase-bd"><p>Tier A to Parquet; IndicatorResolver waterfall; 96-indicator catalog in PostgreSQL.</p><div class="exit"><strong>Exit:</strong> 3+ indicators under 5s cold / under 1s warm.</div></div></div>
+      <div class="phase-block"><div class="phase-hd">Phase 4 — Fast Execution Engine (Week 5)</div><div class="phase-bd"><p>Polars prep → <code>@njit</code> kernel; maps all StrykeX condition operators.</p><div class="exit"><strong>Exit:</strong> Condition loop 10×+ faster than Python baseline.</div></div></div>
+      <div class="phase-block"><div class="phase-hd">Phase 5 — StrykeX Integration (Week 6)</div><div class="phase-bd"><p><code>USE_ODIN=true</code> feature flag; optional async path for 5-year ranges only.</p><div class="exit"><strong>Exit:</strong> NIFTY 5m backtest completes in staging without timeout.</div></div></div>
+      <div class="phase-block"><div class="phase-hd">Phase 6 — Scale Beyond NIFTY 5m (Week 7+)</div><div class="phase-bd"><p>BANKNIFTY + all instruments; 1m/15m/1h; Ray multi-instrument grid sweeps.</p><div class="exit"><strong>Exit:</strong> Same latency targets platform-wide.</div></div></div>
+    </section>
 
-    subgraph warm [Warm Storage]
-        PQ[Parquet L2 - monthly partitions]
-    end
+    <!-- 9. TIMEOUT FIX -->
+    <section id="s9" data-num="09">
+      <h2 class="section-title">9. Timeout Fix Summary</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Root Cause</th><th>ODIN Fix</th><th>Phase</th><th>Expected Gain</th></tr></thead>
+          <tbody>
+            <tr><td>Full 5-year QuestDB scan</td><td>Date-bounded queries + monthly partition pruning</td><td>0</td><td>2–5× immediate</td></tr>
+            <tr><td>Slow SQL columnar reads</td><td>Parquet L2 replaces SQL for backtest loads</td><td>1</td><td>10–30×</td></tr>
+            <tr><td>Repeat identical requests</td><td>Redis L1 + HotStore RAM prewarm</td><td>2</td><td>100×+ (warm)</td></tr>
+            <tr><td>Per-request indicator calc</td><td>Nightly precompute + on-demand Redis cache</td><td>3</td><td>20–50× for Tier A</td></tr>
+            <tr><td>Python condition loop</td><td>Numba JIT @njit kernel on NumPy arrays</td><td>4</td><td>10×+</td></tr>
+            <tr><td>Gateway timeout (60s)</td><td>All above combined → response under 10s</td><td>5</td><td>End-user fix</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </section>
 
-    subgraph source [Source of Truth]
-        QDB[(QuestDB - OHLC time-series)]
-    end
+    <!-- 10. METRICS -->
+    <section id="s10" data-num="10">
+      <h2 class="section-title">10. Success Metrics</h2>
+      <p>The following KPIs define ODIN's success criteria. All measurements are against the NIFTY 5-minute backtest path.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Metric</th><th>Current</th><th>ODIN Target</th><th>Improvement</th></tr></thead>
+          <tbody>
+            <tr><td>1-Year, 1 Indicator</td><td class="timeout">~65s (TIMEOUT)</td><td class="target">&lt; 5s</td><td class="gain">13×+</td></tr>
+            <tr><td>1-Year, 3+ Indicators</td><td class="timeout">~75s (TIMEOUT)</td><td class="target">&lt; 8s</td><td class="gain">9×+</td></tr>
+            <tr><td>5-Year, 3 Indicators</td><td class="timeout">~90s (TIMEOUT)</td><td class="target">&lt; 15s</td><td class="gain">6×+</td></tr>
+            <tr><td>Repeat Same Request</td><td class="timeout">~65s (TIMEOUT)</td><td class="target">&lt; 500ms</td><td class="gain">130×+</td></tr>
+            <tr><td>UI Timeout Rate</td><td class="timeout">High (&gt;50%)</td><td class="target">&lt; 1%</td><td class="gain">&gt;50×</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Secondary KPI: Redis cache hit rate ≥ 70% in steady state. Measured via <code>GET /metrics</code>.</p>
+    </section>
 
-    subgraph meta [Metadata Store]
-        PG[(PostgreSQL - indicators catalog)]
-    end
+    <!-- 11. INFRA -->
+    <section id="s11" data-num="11">
+      <h2 class="section-title">11. Infrastructure Requirements</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Component</th><th>Role</th><th>Status</th><th>Spec</th></tr></thead>
+          <tbody>
+            <tr><td>QuestDB</td><td>Source of truth — OHLC</td><td>Existing + Docker</td><td>Host port 47900; exports NIFTY 5m first</td></tr>
+            <tr><td>PostgreSQL 16</td><td>Indicator catalog + indicator_bars</td><td>Deployed</td><td>Host port 47132; <code>odin</code> schema</td></tr>
+            <tr><td>Redis 7</td><td>L1 hot cache</td><td>Deployed</td><td>Host port 47179; 4–8 GB RAM prod</td></tr>
+            <tr><td>Parquet on SSD</td><td>L2 column store</td><td>Active</td><td>~500 MB–2 GB NIFTY 5m</td></tr>
+            <tr><td>ODIN API</td><td>FastAPI orchestrator</td><td>Deployed</td><td>Host port 47100; prewarm on startup</td></tr>
+            <tr><td>StrykeX Frontend</td><td>Strategy Builder UI</td><td>Unchanged</td><td>No UI modifications</td></tr>
+            <tr><td>Nightly ETL</td><td>QuestDB → Parquet + indicators</td><td>Active</td><td>Cron 23:00 IST; idempotent</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Hadoop/HDFS is not appropriate at this data scale (5–50 GB). Apache Parquet and Apache Arrow apply directly without a distributed cluster.</p>
+    </section>
 
-    subgraph batch [Nightly ETL 23:00 IST]
-        ETL[export + precompute + prewarm]
-    end
+    <!-- 12. RISKS -->
+    <section id="s12" data-num="12">
+      <h2 class="section-title">12. Risks and Mitigations</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
+          <tbody>
+            <tr><td>Unknown QuestDB schema</td><td>High</td><td>High</td><td>Phase 0 documents schema; <code>docs/questdb-schema.md</code></td></tr>
+            <tr><td>StrykeX indicator name mismatch</td><td>Medium</td><td>Medium</td><td><code>registry.yaml</code> + 96-indicator catalog</td></tr>
+            <tr><td>ODIN response shape mismatch</td><td>Medium</td><td>High</td><td><code>/v1/backtest/strykex</code> adapter normalizes JSON</td></tr>
+            <tr><td>5m resampled vs native candles</td><td>Medium</td><td>High</td><td>Confirm QuestDB source with data team</td></tr>
+            <tr><td>Cache staleness after market close</td><td>Low</td><td>Medium</td><td>Nightly ETL + Redis invalidation + prewarm</td></tr>
+            <tr><td>Redis memory exhaustion</td><td>Low</td><td>Medium</td><td>Arrow IPC blobs; monitor via <code>/metrics</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-    UI --> SXAPI
-    SXAPI -->|USE_ODIN=true| BT
-    BT --> HS
-    BT --> Redis
-    Redis -->|miss| PQ
-    PQ -->|gap| QDB
-    BT --> IR
-    IR --> PQ
-    BT --> CE
-    QDB --> ETL
-    ETL --> PQ
-    ETL --> HS
-    ETL --> Redis
-    BT -.-> PG
-          </pre>
-        </div>
-        <div class="callout teal">
-          <strong>Design principle:</strong> Live requests never perform full-history QuestDB scans or cold indicator computation. Heavy work is shifted to nightly batch + startup prewarm.
-        </div>
-      </section>
+    <!-- 13. REPO -->
+    <section id="s13" data-num="13">
+      <h2 class="section-title">13. Repository Structure</h2>
+      <pre class="tree">Optimized Data Infrastructure For Backtesting Engine/
+├── docs/                    architecture, questdb-schema, postgres-schema, indicator-catalog
+├── packages/
+│   ├── odin_data/           QuestDB, Parquet, Redis, HotStore, PostgreSQL
+│   ├── odin_indicators/     registry.yaml, strykex_catalog (96 indicators)
+│   └── odin_engine/         BacktestEngine, Numba kernel
+├── services/
+│   ├── odin_api/            FastAPI — /v1/backtest, /v1/prefetch, /v1/indicators
+│   └── nightly_etl/         export, precompute
+├── infra/docker-compose.yml odin-postgres, odin-redis, odin-questdb, odin-api
+├── scripts/                 setup_questdb_pipeline, prewarm_cache, sync_postgres
+└── benchmarks/              baseline_strykex.py, odin_nifty_5m.py</pre>
+    </section>
 
-      <!-- DATA TIERS -->
-      <section id="data-tiers">
-        <div class="section-head"><span class="section-id">§05</span><h2>Multi-tier data plane</h2></div>
-        <p>Read path for OHLC + indicators (ordered by latency):</p>
-        <div class="tier-stack">
-          <div class="tier l0"><span class="badge">L0</span><strong>HotStore (RAM)</strong><span>In-process preloaded slices — 90d &amp; 365d NIFTY 5m. Sub-ms reads. Populated at API startup via <code>prewarm_defaults()</code>.</span></div>
-          <div class="tier l1"><span class="badge">L1</span><strong>Redis 7</strong><span>Arrow IPC blobs, 24h TTL. Keys: <code>ohlc:NIFTY:5m:{start}:{end}</code>, <code>indicators:NIFTY:5m:{start}:{end}</code></span></div>
-          <div class="tier l2"><span class="badge">L2</span><strong>Parquet (SSD)</strong><span>Monthly columnar files via <code>pl.scan_parquet</code>. 10–30× faster than SQL range scans. Partitioned by <code>YYYY-MM</code>.</span></div>
-          <div class="tier l3"><span class="badge">L3</span><strong>QuestDB</strong><span>OHLC source of truth. Bounded HTTP SQL only — <code>symbol</code>, <code>timeframe</code>, <code>timestamp</code> range in WHERE clause.</span></div>
-          <div class="tier l4"><span class="badge">PG</span><strong>PostgreSQL</strong><span>Indicator catalog (96 slugs), <code>indicator_bars</code>, <code>bar_extensions</code> JSONB. Not in OHLC read path.</span></div>
-        </div>
-      </section>
+    <!-- 14. OPEN ITEMS -->
+    <section id="s14" data-num="14">
+      <h2 class="section-title">14. Open Items — Required Before Production</h2>
+      <p>The following information must be provided by the StockWiz team:</p>
+      <ol>
+        <li>QuestDB connection details and exact table name for NIFTY 5m spot OHLC (host, port, database, TLS)</li>
+        <li>Current StrykeX backtest API endpoint and full request/response JSON schema</li>
+        <li>Full list of indicators in Entry &amp; Exit Criteria dropdowns (exact UI names)</li>
+        <li>Default backtest date range when user does not specify one</li>
+        <li>HTTP timeout value on gateway/load balancer (to define ODIN SLA)</li>
+      </ol>
+      <p>Items 1 and 3 are hard blockers for Phase 0 and Phase 3. Items 2 and 5 are required before Phase 5.</p>
+    </section>
 
-      <!-- REQUEST FLOW -->
-      <section id="request-flow">
-        <div class="section-head"><span class="section-id">§06</span><h2>Live request flow</h2></div>
-        <div class="diagram">
-          <div class="diagram-cap">Sequence — NIFTY 5m backtest</div>
-          <pre class="mermaid">
-sequenceDiagram
-    participant UI as StrykeX UI
-    participant SX as StrykeX API
-    participant OD as ODIN FastAPI
-    participant RAM as HotStore
-    participant R as Redis
-    participant P as Parquet
-    participant E as Numba Engine
+    <!-- 15. DEMO -->
+    <section id="s15" data-num="15">
+      <h2 class="section-title">15. Manager Demo Plan (End of Phase 5)</h2>
+      <ol>
+        <li>Open StrykeX Strategy Builder in browser</li>
+        <li>Build strategy: NIFTY → 5 Minute → Spot → 2 entry indicators → Run Backtest</li>
+        <li>With <code>USE_ODIN=false</code>: demonstrate timeout or 60+ second wait</li>
+        <li>With <code>USE_ODIN=true</code>: results in under 5 seconds</li>
+        <li>Run identical strategy again — sub-500ms from Redis cache hit</li>
+        <li>Present <code>/metrics</code>: cache_hit_rate, p95_latency_by_tier, QuestDB bypass rate</li>
+        <li>Architecture walkthrough: QuestDB → Parquet → Redis → HotStore → Numba Engine</li>
+      </ol>
+    </section>
 
-    UI->>SX: POST backtest
-    SX->>OD: POST /v1/backtest/strykex
-    OD->>RAM: get_ohlc NIFTY 5m range
-    alt L0 hit
-        RAM-->>OD: Polars DataFrame
-    else L0 miss
-        OD->>R: GET ohlc key
-        alt L1 hit
-            R-->>OD: Arrow IPC frame
-        else
-            OD->>P: scan_parquet monthly files
-            P-->>OD: OHLC rows
-            OD->>R: SETEX 24h TTL
-        end
-    end
-    OD->>P: load_indicators precomputed
-    OD->>E: run_backtest_kernel left right ops close
-    E-->>OD: entries exits positions
-    OD-->>SX: trades equity metrics latency_ms
-    SX-->>UI: render results
-          </pre>
-        </div>
-      </section>
-
-      <!-- DATA STORES -->
-      <section id="data-stores">
-        <div class="section-head"><span class="section-id">§07</span><h2>Data stores &amp; schemas</h2></div>
-
-        <h3>QuestDB — OHLC source of truth</h3>
-        <pre>CREATE TABLE ohlc_5m (
-    symbol SYMBOL, timeframe SYMBOL,
-    timestamp TIMESTAMP,
-    open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE, volume LONG
-) TIMESTAMP(timestamp) PARTITION BY MONTH;</pre>
-
-        <h3>Parquet layout</h3>
-        <pre class="tree">data/parquet/
-  ohlc/NIFTY/5m/2026-04.parquet ... 2026-06.parquet
-  indicators/NIFTY/5m/2026-04.parquet  # ema_9, rsi_14, macd_line, ...
-  catalog.json                         # min_ts, max_ts, months[]</pre>
-
-        <h3>PostgreSQL (<code>odin</code> schema)</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Table</th><th>Purpose</th></tr></thead>
-            <tbody>
-              <tr><td><code>indicator_catalog</code></td><td>96 StrykeX indicators — slug, category, params, implementation status</td></tr>
-              <tr><td><code>condition_rule_templates</code></td><td>286 entry/exit quant rule templates</td></tr>
-              <tr><td><code>indicator_bars</code></td><td>Wide precomputed indicator columns per bar</td></tr>
-              <tr><td><code>bar_extensions</code></td><td>JSONB payload for custom per-bar metadata</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3>StrykeX → ODIN request mapping</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>StrykeX UI field</th><th>ODIN parameter</th><th>Notes</th></tr></thead>
-            <tbody>
-              <tr><td>Instrument (NIFTY)</td><td><code>symbol=NIFTY</code></td><td>Phase 1 scope</td></tr>
-              <tr><td>Chart Time Frame (5 Minute)</td><td><code>timeframe=5m</code></td><td>Phase 1 scope</td></tr>
-              <tr><td>Chart Selection (Spot)</td><td><code>series=spot</code></td><td>QuestDB filter</td></tr>
-              <tr><td>Entry / Exit conditions</td><td><code>entry_rules[]</code> <code>exit_rules[]</code></td><td>Indicator + Operator + value</td></tr>
-              <tr><td>Date range</td><td><code>start</code> <code>end</code></td><td>Default 365d — never unbounded 5y</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- INDICATORS -->
-      <section id="indicators">
-        <div class="section-head"><span class="section-id">§08</span><h2>Indicator engine</h2></div>
-        <div class="card-grid">
-          <div class="mini-card">
-            <h4>Tier A — Nightly precompute</h4>
-            <p>EMA 9/20/50/200, SMA 20/50, RSI 14, MACD, ATR 14, Bollinger 20/2 → stored in Parquet via <code>precompute_all()</code></p>
-          </div>
-          <div class="mini-card">
-            <h4>Tier B — On-demand + cache</h4>
-            <p>Custom params (e.g. RSI 21) computed once with Polars, cached in Redis: <code>ind:NIFTY:5m:RSI:{hash}:{start}:{end}</code></p>
-          </div>
-          <div class="mini-card">
-            <h4>Catalog</h4>
-            <p>96 indicators + 286 rule templates in PostgreSQL. Exposed via <code>GET /v1/indicators</code> and <code>GET /v1/indicators/{slug}/rules</code></p>
-          </div>
-        </div>
-        <p><strong>Execution kernel:</strong> Polars prepares aligned NumPy arrays → <code>@njit run_backtest_kernel()</code> evaluates multi-rule AND conditions per candle → Python builds trade list + equity curve.</p>
-      </section>
-
-      <!-- API -->
-      <section id="api">
-        <div class="section-head"><span class="section-id">§09</span><h2>API contract</h2></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
-            <tbody>
-              <tr><td>POST</td><td><code>/v1/backtest</code></td><td>Native ODIN backtest request (Pydantic schema)</td></tr>
-              <tr><td>POST</td><td><code>/v1/backtest/strykex</code></td><td>Drop-in StrykeX adapter — normalize request/response</td></tr>
-              <tr><td>POST</td><td><code>/v1/backtest/grid</code></td><td>Ray-parallel param grid sweeps</td></tr>
-              <tr><td>POST</td><td><code>/v1/prefetch</code></td><td>Pre-load symbol/timeframe/range into HotStore + Redis</td></tr>
-              <tr><td>GET</td><td><code>/v1/indicators</code></td><td>Catalog from PostgreSQL (fallback: in-memory YAML)</td></tr>
-              <tr><td>GET</td><td><code>/v1/prewarm/status</code></td><td>Startup prewarm health — RAM slice keys</td></tr>
-              <tr><td>GET</td><td><code>/metrics</code></td><td>cache_hit_rate, avg_latency_ms, last_data_tier</td></tr>
-              <tr><td>GET</td><td><code>/health</code></td><td>Liveness probe</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <pre>POST /v1/backtest/strykex
-Content-Type: application/json
-
-{
-  "symbol": "NIFTY",
-  "timeframe": "5m",
-  "entry_rules": [
-    { "left_indicator": "current_close", "operator": "GT", "right_indicator": "ema_20" },
-    { "left_indicator": "rsi_14", "operator": "GT", "right_value": 50 }
-  ]
-}</pre>
-      </section>
-
-      <!-- INTEGRATION -->
-      <section id="integration">
-        <div class="section-head"><span class="section-id">§10</span><h2>StrykeX integration</h2></div>
-        <p>Two backend hooks. Zero frontend changes.</p>
-        <ol>
-          <li><strong>Feature flag:</strong> <code>USE_ODIN=true</code> + <code>ODIN_API_URL=http://odin-api:8000</code> in StrykeX backend</li>
-          <li><strong>Prefetch on Strategy Setup:</strong> when user confirms NIFTY + 5m, fire <code>POST /v1/prefetch</code> (async, fire-and-forget)</li>
-          <li><strong>Backtest redirect:</strong> replace inline backtest with <code>POST /v1/backtest/strykex</code></li>
-        </ol>
-        <div class="diagram">
-          <div class="diagram-cap">Integration sequence</div>
-          <pre class="mermaid">
-sequenceDiagram
-    participant U as Trader
-    participant FE as StrykeX Frontend
-    participant BE as StrykeX Backend
-    participant O as ODIN API
-
-    U->>FE: Select NIFTY + 5m
-    FE->>BE: Save strategy setup
-    BE->>O: POST /v1/prefetch
-    Note over O: HotStore + Redis warm
-
-    U->>FE: Click Backtest
-    FE->>BE: Run backtest
-    BE->>O: POST /v1/backtest/strykex
-    O-->>BE: JSON result
-    BE-->>FE: Display trades PnL
-          </pre>
-        </div>
-      </section>
-
-      <!-- PREWARM -->
-      <section id="prewarm">
-        <div class="section-head"><span class="section-id">§11</span><h2>Cold-start prewarm strategy</h2></div>
-        <p>Ensures <strong>first user click</strong> meets &lt;1s SLA — not only cache-warmed repeat requests.</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Stage</th><th>Trigger</th><th>Action</th></tr></thead>
-            <tbody>
-              <tr><td>Nightly ETL</td><td>Cron 23:00 IST</td><td><code>export</code> → <code>precompute</code> → <code>sync_postgres</code></td></tr>
-              <tr><td>API startup</td><td><code>PREWARM_ON_STARTUP=true</code></td><td><code>prewarm_defaults()</code> + <code>warmup_backtest()</code> (Numba JIT compile)</td></tr>
-              <tr><td>User session</td><td>Strategy Setup screen</td><td><code>POST /v1/prefetch</code> for selected symbol/TF</td></tr>
-              <tr><td>Manual ops</td><td>After data refresh</td><td><code>python scripts/prewarm_cache.py</code></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="callout amber">
-          <strong>Config:</strong> <code>HOT_STORE_ENABLED=true</code> · <code>PREWARM_DAY_RANGES=[90, 365]</code>
-        </div>
-      </section>
-
-      <!-- INFRA -->
-      <section id="infra">
-        <div class="section-head"><span class="section-id">§12</span><h2>Infrastructure (Docker)</h2></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Container</th><th>Image</th><th>Host port</th><th>Role</th></tr></thead>
-            <tbody>
-              <tr><td><code>odin-questdb</code></td><td>questdb/questdb</td><td>47900</td><td>OHLC time-series (source of truth)</td></tr>
-              <tr><td><code>odin-postgres</code></td><td>postgres:16-alpine</td><td>47132</td><td>Indicator catalog + indicator_bars</td></tr>
-              <tr><td><code>odin-redis</code></td><td>redis:7-alpine</td><td>47179</td><td>L1 cache (Arrow IPC)</td></tr>
-              <tr><td><code>odin-api</code></td><td>FastAPI custom</td><td>47100</td><td>Backtest orchestration + prewarm</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <pre>docker compose -f infra/docker-compose.yml up -d
-python scripts/setup_questdb_pipeline.py
-python scripts/prewarm_cache.py
-uvicorn services.odin_api.main:app --reload --app-dir .</pre>
-      </section>
-
-      <!-- REPO -->
-      <section id="repo">
-        <div class="section-head"><span class="section-id">§13</span><h2>Repository structure</h2></div>
-        <pre class="tree">packages/
-  odin_data/       QuestDB, Parquet, Redis, HotStore, PostgreSQL clients
-  odin_indicators/ 96-indicator catalog, registry.yaml, precompute, resolver
-  odin_engine/     Numba kernel, condition evaluator, BacktestEngine
-services/
-  odin_api/        FastAPI — /v1/backtest, /v1/prefetch, /v1/indicators
-  nightly_etl/     QuestDB → Parquet → indicator precompute
-infra/             docker-compose.yml (odin stack, 47xxx ports)
-scripts/           setup_questdb_pipeline, prewarm_cache, sync_postgres
-benchmarks/        baseline_strykex.py vs odin_nifty_5m.py</pre>
-      </section>
-
-      <!-- PHASES -->
-      <section id="phases">
-        <div class="section-head"><span class="section-id">§14</span><h2>Phased rollout</h2></div>
-
-        <div class="phase">
-          <div class="phase-hd"><h4>Phase 0 — Baseline &amp; QuestDB query contract</h4><span class="tag done">Complete</span></div>
-          <div class="phase-bd">
-            <p>Profile timeout root cause; bounded SQL; baseline JSON benchmarks.</p>
-            <div class="exit"><strong>Exit:</strong> 1-year NIFTY query &lt; 2s; documented API schema</div>
-          </div>
-        </div>
-        <div class="phase">
-          <div class="phase-hd"><h4>Phase 1 — Parquet tier (Polars scan_parquet)</h4><span class="tag done">Complete</span></div>
-          <div class="phase-bd">
-            <p>Monthly OHLC export; QuestDB only on Parquet miss.</p>
-            <div class="exit"><strong>Exit:</strong> 1-year OHLC load &lt; 500ms from Parquet</div>
-          </div>
-        </div>
-        <div class="phase">
-          <div class="phase-hd"><h4>Phase 2 — Redis L1 cache</h4><span class="tag done">Complete</span></div>
-          <div class="phase-bd">
-            <p>OHLC + indicator slice keys; 24h TTL; <code>/metrics</code> cache hit rate.</p>
-            <div class="exit"><strong>Exit:</strong> Repeat backtest &lt; 500ms</div>
-          </div>
-        </div>
-        <div class="phase">
-          <div class="phase-hd"><h4>Phase 3 — Indicator precompute + catalog</h4><span class="tag done">Complete</span></div>
-          <div class="phase-bd">
-            <p>Tier A → Parquet; Tier B on-demand; 96 indicators in PostgreSQL.</p>
-            <div class="exit"><strong>Exit:</strong> 3+ indicators &lt; 1s cold with prewarm</div>
-          </div>
-        </div>
-        <div class="phase">
-          <div class="phase-hd"><h4>Phase 4 — Numba execution kernel</h4><span class="tag done">Complete</span></div>
-          <div class="phase-bd">
-            <p><code>@njit</code> candle loop; maps EQ, GT, LT, CROSSES_ABOVE operators.</p>
-            <div class="exit"><strong>Exit:</strong> Engine phase &lt; 1ms after JIT warmup</div>
-          </div>
-        </div>
-        <div class="phase">
-          <div class="phase-hd"><h4>Phase 5 — StrykeX production integration</h4><span class="tag pending">Pending approval</span></div>
-          <div class="phase-bd">
-            <p><code>USE_ODIN=true</code> on StrykeX API; staging QA; prefetch hook.</p>
-            <div class="exit"><strong>Exit:</strong> NIFTY 5m backtest completes in staging UI — no timeout</div>
-          </div>
-        </div>
-        <div class="phase">
-          <div class="phase-hd"><h4>Phase 6 — Scale (BANKNIFTY, 1m/15m/1h, Ray grid)</h4><span class="tag pending">Later</span></div>
-          <div class="phase-bd">
-            <p>Expand Parquet export catalog; multi-instrument parallel sweeps.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- RISKS -->
-      <section id="risks">
-        <div class="section-head"><span class="section-id">§15</span><h2>Risks &amp; mitigations</h2></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
-            <tbody>
-              <tr><td>QuestDB schema drift</td><td>Documented DDL in <code>docs/questdb-schema.md</code>; bounded query contract enforced in client</td></tr>
-              <tr><td>Indicator name mismatch</td><td>96-indicator catalog + <code>registry.yaml</code> + StrykeX adapter mapping</td></tr>
-              <tr><td>API response format drift</td><td><code>/v1/backtest/strykex</code> normalizes output to StrykeX JSON shape</td></tr>
-              <tr><td>Stale cache post ETL</td><td>Nightly invalidation + <code>prewarm_cache.py</code> after export</td></tr>
-              <tr><td>5m resampled vs native candles</td><td>ETL must match StrykeX Spot chart source; validated in Phase 0</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ASK -->
-      <section id="ask">
-        <div class="section-head"><span class="section-id">§16</span><h2>Approvals &amp; open items</h2></div>
-        <ul>
-          <li><strong>Approve</strong> StrykeX backtest API redirect to ODIN (<code>USE_ODIN=true</code>)</li>
-          <li><strong>Provide</strong> production QuestDB credentials + NIFTY 5m spot table confirmation</li>
-          <li><strong>Confirm</strong> default backtest window (365d recommended for interactive; 5y async)</li>
-          <li><strong>Staging</strong> — 1-week QA with real users before full rollout</li>
-          <li><strong>Gateway timeout</strong> — document current LB limit for SLA alignment</li>
-        </ul>
-        <div class="callout blue">
-          <strong>No UI work, no user training.</strong> Invisible infrastructure — users stop seeing timeout errors.
-        </div>
-      </section>
+    <!-- 16. RECOMMENDATION -->
+    <section id="s16" data-num="16">
+      <h2 class="section-title">16. Recommendation</h2>
+      <p>Approve Phase 0 and Phase 1 to begin immediately. These phases require no new infrastructure beyond QuestDB query contract enforcement and Parquet file export on existing hardware. Together they deliver the majority of total latency improvement — estimated 10–30× — before Redis caching or engine optimizations.</p>
+      <p>Full production integration (Phase 5) is achievable within 6 weeks from Phase 0 kickoff. Phase 6 can proceed incrementally without impacting NIFTY 5m production stability.</p>
+      <div class="table-wrap">
+        <table class="rec-table">
+          <thead><tr><th>Action Required</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Approve Phase 0 + Phase 1</td><td>Confirm QuestDB schema details and begin baseline profiling this week</td></tr>
+            <tr><td>Provide Open Items 1–5</td><td>Share QuestDB connection, API schema, indicator list, timeout value</td></tr>
+            <tr><td>Set Phase 5 demo date</td><td>Agree on Week 6 demo date for manager sign-off before production cutover</td></tr>
+            <tr><td>Approve Phase 5 integration</td><td>Enable <code>USE_ODIN=true</code> on StrykeX staging backtest API</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rec-callout">
+        <strong>Approve Phase 0 + Phase 1 this week</strong>
+        <span>No new infrastructure required · Production cutover at Phase 5 (Week 6)</span>
+      </div>
+    </section>
 
     </div>
   </div>
-</div>
 
-<footer>
-  Project ODIN · Technical Architecture &amp; Delivery Report · June 2026<br>
-  Repository: Optimized Data Infrastructure For Backtesting Engine · <code>manager-report/index.html</code>
-</footer>
+  <footer class="doc-footer">
+    Project ODIN · Manager Report · June 2026 · StockWiz Technologies LLP · Confidential<br />
+    Source document: Project ODIN Prototype.docx · Web: manager-report/index.html
+  </footer>
+
+</main>
+
+<button class="back-top" id="backTop" title="Back to top" aria-label="Back to top">&#8593;</button>
 
 <script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: "base",
-    themeVariables: {
-      primaryColor: "#eff6ff",
-      primaryTextColor: "#0a1628",
-      primaryBorderColor: "#2563eb",
-      lineColor: "#64748b",
-      secondaryColor: "#f4f6fa",
-      tertiaryColor: "#fff",
-      fontFamily: "DM Sans, sans-serif",
-      fontSize: "13px"
-    },
-    flowchart: { curve: "basis", padding: 16 },
-    sequence: { actorMargin: 36, messageMargin: 28 }
-  });
+  (function () {
+    var bar = document.getElementById("progress");
+    var btn = document.getElementById("backTop");
+    var navLinks = document.querySelectorAll(".side-links a[href^='#'], .mobile-nav a[href^='#']");
+    var sections = [];
+
+    navLinks.forEach(function (a) {
+      var id = a.getAttribute("href").slice(1);
+      var el = document.getElementById(id);
+      if (el && !sections.some(function (s) { return s.el === el; })) {
+        sections.push({ link: a, el: el });
+      }
+    });
+
+    sections.sort(function (a, b) { return a.el.offsetTop - b.el.offsetTop; });
+
+    window.addEventListener("scroll", function () {
+      var h = document.documentElement;
+      var pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+      if (bar) bar.style.width = pct + "%";
+      if (btn) btn.classList.toggle("visible", h.scrollTop > 500);
+
+      var scrollY = h.scrollTop + 100;
+      var current = sections[0];
+      sections.forEach(function (s) {
+        if (s.el.offsetTop <= scrollY) current = s;
+      });
+      document.querySelectorAll(".side-links a, .mobile-nav a").forEach(function (a) {
+        a.classList.remove("active");
+      });
+      if (current) {
+        var id = current.el.id;
+        document.querySelectorAll(".side-links a[href='#" + id + "'], .mobile-nav a[href='#" + id + "']").forEach(function (a) {
+          a.classList.add("active");
+        });
+      }
+    });
+
+    if (btn) btn.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  })();
 </script>
+
 </body>
 </html>
